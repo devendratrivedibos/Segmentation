@@ -1,4 +1,4 @@
-# train_utils/hybrid_criterion.py
+# train_utils/hybrid_loss.py
 import math
 from typing import Optional, Dict, Union
 
@@ -25,19 +25,31 @@ def one_hot_ignore_index(targets: torch.Tensor, num_classes: int, ignore_index: 
     return oh
 
 
-def normalize_weights(w: torch.Tensor, mode: str = "mean1", eps: float = 1e-8) -> torch.Tensor:
+def normalize_weights(w: torch.Tensor,
+                      mode: str = "mean1",
+                      eps: float = 1e-8) -> torch.Tensor:
     """
-    Normalize class weights to keep scales stable.
-    - 'mean1': divide so mean == 1
-    - 'max1' : divide so max  == 1
+    Normalize only VALID (>0) weights.
+
+    Missing classes (weight=0) remain zero and
+    do not affect normalization.
     """
+
     w = w.clone()
+
+    valid = w > 0
+
+    if valid.sum() == 0:
+        return w
+
     if mode == "mean1":
-        m = w.mean().clamp_min(eps)
-        w = w / m
+        m = w[valid].mean().clamp_min(eps)
+        w[valid] = w[valid] / m
+
     elif mode == "max1":
-        m = w.max().clamp_min(eps)
-        w = w / m
+        m = w[valid].max().clamp_min(eps)
+        w[valid] = w[valid] / m
+
     return w
 
 
@@ -325,15 +337,13 @@ class CombinedCriterion(nn.Module):
             raise TypeError("outputs must be Tensor or dict with 'out' (and optional 'aux').")
 
 
-# -----------------------------
-# Helper: build criterion from class counts (mask stats)
-# -----------------------------
 def build_crack_criterion(
         num_classes: int,
         class_counts: Optional[torch.Tensor] = None,
         device: Optional[torch.device] = None,
         ignore_index: int = 255
 ) -> CombinedCriterion:
+
     if device is None:
         device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
@@ -344,19 +354,30 @@ def build_crack_criterion(
     tv_w = None
 
     if class_counts is not None:
+
         class_counts = class_counts.to(
             device=device,
             dtype=torch.float32
         )
 
         # --------------------------------------------------
-        # Cross Entropy / Focal weights
+        # VALID CLASSES (ignore classes having 0 pixels)
         # --------------------------------------------------
-        ce_w = class_counts.sum() / class_counts
+        valid = class_counts > 0
 
-        # Stronger weighting for rare crack classes
-        ce_w = torch.pow(ce_w, 0.65)
+        total_pixels = class_counts[valid].sum()
 
+        # ==================================================
+        # Cross Entropy / Focal Weights
+        # ==================================================
+        ce_w = torch.zeros_like(class_counts)
+
+        ce_w[valid] = total_pixels / class_counts[valid]
+
+        # make rare classes stronger
+        ce_w[valid] = torch.pow(ce_w[valid], 0.65)
+
+        # normalize only valid classes
         ce_w = normalize_weights(
             ce_w,
             mode="mean1"
@@ -367,31 +388,61 @@ def build_crack_criterion(
             min=0.5,
             max=12.0
         )
-        # --------------------------------------------------
-        # Dice / Tversky weights
-        # --------------------------------------------------
-        dice_w = class_counts.sum() / class_counts
 
-        dice_w = normalize_weights( dice_w, mode="mean1")
-        dice_w = torch.clamp(dice_w, min=0.5, max=10.0)
+        # Missing classes receive zero weight
+        ce_w[~valid] = 0.0
+
+        # ==================================================
+        # Dice / Tversky Weights
+        # ==================================================
+        dice_w = torch.zeros_like(class_counts)
+
+        dice_w[valid] = total_pixels / class_counts[valid]
+
+        dice_w = normalize_weights(
+            dice_w,
+            mode="mean1"
+        )
+
+        dice_w = torch.clamp(
+            dice_w,
+            min=0.5,
+            max=10.0
+        )
+
+        dice_w[~valid] = 0.0
+
+        # ==================================================
+        # Manual weighting
+        # ==================================================
 
         # Background
-        ce_w[0] *= 0.1
-        dice_w[0] *= 0.1
-        # Longitudinal
+        ce_w[0] *= 0.10
+        dice_w[0] *= 0.10
+
+        # Class 1 = Alligator (missing)
+        # Keep weight = 0
+
+        # Class 2 = Transverse Crack
         ce_w[2] *= 1.5
         dice_w[2] *= 1.5
-        # Transverse
+
+        # Class 3 = Longitudinal Crack
         ce_w[3] *= 3.0
         dice_w[3] *= 3.0
-        # Pothole
+
+        # Class 4 = Pothole
         ce_w[4] *= 0.8
         dice_w[4] *= 0.8
-        # Patch
+
+        # Class 5 = Patch
         ce_w[5] *= 1.5
         dice_w[5] *= 1.5
 
         tv_w = dice_w.clone()
+
+    print("\nLoaded Class Counts:")
+    print(class_counts)
 
     print("\nFinal CE Weights")
     print(ce_w)
@@ -401,6 +452,7 @@ def build_crack_criterion(
 
     print("\nFinal Tversky Weights")
     print(tv_w)
+
     criterion = CombinedCriterion(
         num_classes=num_classes,
 

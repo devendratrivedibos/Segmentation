@@ -10,7 +10,7 @@ from albumentations.pytorch import ToTensorV2
 
 COLOR_MAP = {
     (0, 0, 0): (0, "Background"),
-    # (255, 0, 0): (1, "Alligator"),
+    (255, 0, 0): (0, "Alligator"),
     (0, 0, 255): (2, "Transverse Crack"),
     (0, 255, 0): (3, "Longitudinal Crack"),
     (139, 69, 19): (4, "Pothole"),
