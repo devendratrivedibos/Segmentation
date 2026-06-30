@@ -2,11 +2,11 @@ import os
 import shutil
 
 # ====== CONFIG ======
-images_dir = r"Z:\BHOPAL_MAY 2026\JAMUNIYA-BARELY_2026-05-15_11-44-18\SECTION-5\process_distress"
-masks_dir = r"Z:\BHOPAL_MAY 2026\JAMUNIYA-BARELY_2026-05-15_11-44-18\SECTION-5\MASKS_NEW"
+images_dir = r"W:\BURHANPUR_MAY 2026\MHMPBORDER-SHINDHIBASTI_2026-05-17_09-35-46\SECTION-5\process_distress"
+masks_dir = r"W:\BURHANPUR_MAY 2026\MHMPBORDER-SHINDHIBASTI_2026-05-17_09-35-46\SECTION-5\MASKS_NEW"
 
-output_images = r"Z:\BHOPAL_MAY 2026\JAMUNIYA-BARELY_2026-05-15_11-44-18\SECTION-5\IMAGES_NEW"
-output_masks = r"Z:\BHOPAL_MAY 2026\JAMUNIYA-BARELY_2026-05-15_11-44-18\SECTION-5\MASKS_NEW"
+output_images = r"W:\BURHANPUR_MAY 2026\MHMPBORDER-SHINDHIBASTI_2026-05-17_09-35-46\SECTION-5\IMAGES_NEW"
+output_masks = r"W:\BURHANPUR_MAY 2026\MHMPBORDER-SHINDHIBASTI_2026-05-17_09-35-46\SECTION-5\MASKS_NEW"
 # Create output folders if they don't exist
 os.makedirs(output_images, exist_ok=True)
 os.makedirs(output_masks, exist_ok=True)
@@ -22,15 +22,18 @@ print(f"Found {len(common)} matches")
 
 # Copy files
 for name in common:
-    img_src = os.path.join(images_dir, image_files[name])
-    mask_src = os.path.join(masks_dir, mask_files[name])
+    try:
+        img_src = os.path.join(images_dir, image_files[name])
+        mask_src = os.path.join(masks_dir, mask_files[name])
 
-    img_dst = os.path.join(output_images, image_files[name])
-    mask_dst = os.path.join(output_masks, mask_files[name])
+        img_dst = os.path.join(output_images, image_files[name])
+        mask_dst = os.path.join(output_masks, mask_files[name])
 
-    shutil.copy2(img_src, img_dst)
-    # shutil.copy2(mask_src, mask_dst)
+        shutil.copy2(img_src, img_dst)
+        # shutil.copy2(mask_src, mask_dst)
 
-    print(f"Copied: {image_files[name]} & {mask_files[name]}")
+        print(f"Copied: {image_files[name]} & {mask_files[name]}")
 
 
+    except Exception as e:
+        print(f"Error copying {name}: {e}")

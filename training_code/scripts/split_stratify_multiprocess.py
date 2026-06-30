@@ -9,15 +9,9 @@ from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # ===================== CONFIG =====================
-# images_dir = r"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\IMAGES"
-# masks_dir = r"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\MASKS_TRAIL"
-# output_dir = r"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\SPLIT"
-
-# ===================== CONFIG =====================
-images_dir = r"Z:\Devendra\ASPHALT\ASPHALT_ACCEPTED\COMBINED_SPLITTED\TRAIN\IMAGES"
-masks_dir = r"Z:\Devendra\ASPHALT\ASPHALT_ACCEPTED\COMBINED_SPLITTED\TRAIN\MASKS_TRAIL"
-output_dir = r"Z:\Devendra\ASPHALT\ASPHALT_ACCEPTED\COMBINED_SPLITTED\TRAIN\SPLIT"
-
+images_dir = r"Z:\Devendra\ASPHALT\NEWTRAINING\IMAGES"
+masks_dir = r"Z:\Devendra\ASPHALT\NEWTRAINING\MASKS"
+output_dir = r"Z:\Devendra\ASPHALT\NEWTRAINING\SPLIT"
 
 test_size = 0.01
 val_size = 0.20
@@ -42,13 +36,13 @@ COLOR_MAP = {
     (255, 255, 255): 13,
     (255, 215, 0): 14,
 }
+
 NUM_CLASSES = len(COLOR_MAP)
 
 # ===================== LUT =====================
 lut = np.full((256, 256, 256), -1, dtype=np.int16)
 for rgb, cls_id in COLOR_MAP.items():
     lut[rgb] = cls_id
-
 
 # ===================== FUNCTIONS =====================
 def get_label_vector(mask_path):

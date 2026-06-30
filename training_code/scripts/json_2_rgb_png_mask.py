@@ -158,19 +158,18 @@ def save_masks_from_json(json_file, output_dir="./masks", use_rgb=True):
 
 
 folderlist = [
-
+    r"W:\BURHANPUR_MAY 2026\MHMPBORDER-SHINDHIBASTI_2026-05-17_09-35-46\SECTION-5\Jayesh_S5_16-6-2026\project-100-at-2026-06-16-17-43-b1c9e68c.json"
 ]
 
 for i in folderlist:
     save_masks_from_json(i,
-                         r"X:\BURHANPUR_MAY 2026\MHMPBORDER-SHINDHIBASTI_2026-05-17_09-35-46\SECTION-1\MASKS_NEW",
+                         r"W:\BURHANPUR_MAY 2026\MHMPBORDER-SHINDHIBASTI_2026-05-17_09-35-46\SECTION-5\MASKS_NEW",
                          use_rgb=True)
 
 folderlist = [
-
 ]
 
 for i in folderlist:
     save_masks_from_json(i,
-                r"Z:\Devendra\CONCRETE\MASKS_TRIAL",
+                r"Z:\BHOPAL_MAY 2026\JAMUNIYA-BARELY_2026-05-15_11-44-18\SECTION-5\MASKS_NEW",
                          use_rgb=True)

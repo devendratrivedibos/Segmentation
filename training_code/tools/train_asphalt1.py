@@ -34,8 +34,8 @@ from models.unet.UnetPP_backbone import build_unetpp_model
 
 
 project_root_ = Path(__file__).resolve().parent.parent.parent
-OUTPUT_SAVE_PATH = project_root_ / 'weights' / 'Unet8June'  # Change this to your desired output path
-model_name = "8pythonjunetpp"  # Change this to your desired model name
+OUTPUT_SAVE_PATH = project_root_ / 'weights' / 'Unet30June'  # Change this to your desired output path
+model_name = "30junetpp"  # Change this to your desired model name
 os.makedirs(OUTPUT_SAVE_PATH, exist_ok=True)
 CHECKPOINT_FILE = OUTPUT_SAVE_PATH / "latest_checkpoint.pth"
 
@@ -93,8 +93,9 @@ def main(args):
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     # segmentation nun_classes + background
     num_classes = args.num_classes + 1
-    mean = (0.47668327, 0.47668327, 0.47668327)  # 478
-    std = (0.148, 0.148, 0.148)  # 145
+    mean = (0.4766, 0.4766, 0.4766)  # 478
+    std = (0.1454, 0.1454, 0.1454)  # 145
+
     num_workers = min([os.cpu_count(), args.batch_size if args.batch_size > 1 else 0, 8])
     train_dataset = CrackDataset(args.data_path,
                                  train=True,
@@ -146,8 +147,7 @@ def main(args):
         assert os.path.exists(args.pretrained_weights), ("weights file: '{}' not exist."
                                                          .format(args.pretrained_weights))
         model_dict = model.state_dict()
-        checkpoint = torch.load(args.pretrained_weights, map_location=device)
-
+        checkpoint = torch.load(args.pretrained_weights, map_location=device)        
         # Handle both raw state_dict and dict with "state_dict"
         if "state_dict" in checkpoint:
             pretrained_dict = checkpoint["state_dict"]
@@ -301,14 +301,14 @@ Parse command-line arguments for training configuration.
     parser = argparse.ArgumentParser(description="pytorch unet training")
     parser.add_argument("--device", default="cuda:0", help="training device")
     parser.add_argument("--data-path",
-                        default=r"G:\Devendra\ASPHALT\SPLIT",
+                        default=r"G:\Devendra\ASPHALT\NEWTRAINING\SPLIT",
                         help="root")
     parser.add_argument("--num-classes", default=5, type=int)  # exclude background
     parser.add_argument("--aux", default=True, type=bool, help="deeplabv3 auxilier loss")
     parser.add_argument("--phi", default="b0", help="Use backbone")
-    parser.add_argument('--pretrained', default=False, type=bool, help='backbone')
+    parser.add_argument('--pretrained', default=True, type=bool, help='backbone')
     parser.add_argument('--pretrained-weights', type=str,
-                        default=r"",
+                        default=r"Y:\Devendra_Files\segmentation_training\weights\Unet29June\29junetpp_best_epoch33_dice0.675.pth",
                         help='pretrained weights path')
     parser.add_argument('--optimizer-type', default="adamw")
     parser.add_argument('--lr', default=0.0001, type=float, help='initial learning rate')  # 0.00006
@@ -317,7 +317,7 @@ Parse command-line arguments for training configuration.
                         help='momentum')
     parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
                         metavar='W', help='weight decay (default: 1e-4)', dest='weight_decay')
-    parser.add_argument("-b", "--batch-size", default=8, type=int)
+    parser.add_argument("-b", "--batch-size", default=16, type=int)
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='start epoch')
     parser.add_argument("--epochs", default=500, type=int, metavar="N",
                         help="number of total epochs to train")

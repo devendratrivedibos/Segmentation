@@ -19,21 +19,21 @@ pcams_dir = os.path.join(root_dir, 'pcams')
 
 # --- Example multiple folders ---
 image_dirs = [
-    rf"Z:\Devendra\ASPHALT\ASPHALT_ACCEPTED\COMBINED_SPLITTED\TRAIN\SPLIT\TRAIN\IMAGES",
-    rf"Z:\Devendra\ASPHALT\ASPHALT_ACCEPTED\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\IMAGES",
-    rf"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\IMAGES",
+# r"Z:\Devendra\ASPHALT\NEWTRAINING\SPLIT\VAL\IMAGES",
+# r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\IMAGES",
+r"Z:\Devendra\ASPHALT\NEWTESTING\IMAGES"
 ]
 
 orig_mask_dirs = [
-    rf"Z:\Devendra\ASPHALT\ASPHALT_ACCEPTED\COMBINED_SPLITTED\TRAIN\SPLIT\TRAIN\MASKS",
-    rf"Z:\Devendra\ASPHALT\ASPHALT_ACCEPTED\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\MASKS",
-    rf"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\MASKS",
+# r"Z:\Devendra\ASPHALT\NEWTRAINING\SPLIT\VAL\MASKS",
+# r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\MASKS",
+r"Z:\Devendra\ASPHALT\NEWTESTING\MASKS"
 ]
 
 pred_mask_dirs = [
-    # rf"Z:\Devendra\ASPHALT\ASPHALT_ACCEPTED\COMBINED_SPLITTED\TRAIN\SPLIT\TRAIN\PRED",
-    # rf"Z:\Devendra\ASPHALT\ASPHALT_ACCEPTED\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\PRED",
-    rf"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\PRED",
+# r"Z:\Devendra\ASPHALT\NEWTRAINING\SPLIT\VAL\IMAGES_RESULT",
+# r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\IMAGES_RESULT",
+r"Z:\Devendra\ASPHALT\NEWTESTING\IMAGES_RESULT"
 ]
 
 # --- Output dirs ---
@@ -199,6 +199,7 @@ class ImageMaskViewerOptimized:
         img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = cv2.flip(img, 0)
+        img = cv2.resize(img, (419, 1024), interpolation=cv2.INTER_NEAREST)
         orig_mask = cv2.imread(orig_mask_path, cv2.IMREAD_UNCHANGED)
         orig_mask = cv2.flip(orig_mask, 0)
         if len(orig_mask.shape) == 2:

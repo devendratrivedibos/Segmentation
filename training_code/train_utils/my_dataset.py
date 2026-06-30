@@ -10,20 +10,11 @@ from albumentations.pytorch import ToTensorV2
 
 COLOR_MAP = {
     (0, 0, 0): (0, "Background"),
-    (255, 0, 0): (1, "Alligator"),
+    # (255, 0, 0): (1, "Alligator"),
     (0, 0, 255): (2, "Transverse Crack"),
     (0, 255, 0): (3, "Longitudinal Crack"),
     (139, 69, 19): (4, "Pothole"),
     (255, 165, 0): (5, "Patches"),
-    # (255, 0, 255): (6, "Multiple Crack"),
-    # (0, 255, 255): (7, "Spalling"),
-    # (0, 128, 0): (8, "Corner Break"),
-    # (255, 100, 203): (9, "Sealed Joint - T"),
-    # (199, 21, 133): (10, "Sealed Joint - L"),
-    # (128, 0, 128): (11, "Punchout"),
-    # (112, 102, 255): (12, "Popout"),
-    # (255, 255, 255): (13, "Unclassified"),
-    # (255, 215, 0): (14, "Cracking"),
 }
 
 class CrackDataset(Dataset):
@@ -98,6 +89,7 @@ class SegmentationPresetTrain:
     def __init__(self, img_size, mean, std):
         self.transforms = A.Compose([
             # Geometry
+            A.Resize(1024, 419),
             A.HorizontalFlip(p=0.5),
             A.ShiftScaleRotate(
                 shift_limit=0.05,
@@ -143,6 +135,7 @@ class SegmentationPresetTrain:
 class SegmentationPresetEval:
     def __init__(self, img_size, mean, std):
         self.transforms = A.Compose([
+            A.Resize(1024, 419),
             A.Normalize(mean=mean, std=std),
             ToTensorV2(),
         ])

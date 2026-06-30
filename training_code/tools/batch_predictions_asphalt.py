@@ -27,6 +27,7 @@ sys.path.append(os.path.join(project_root, '..'))
 from models.unet.UnetPP import UNetPP
 from models.unet.UnetPP import UNetPP
 from models.unet.UnetPP_backbone import build_unetpp_model
+
 COLOR_MAP = {
     (0, 0, 0): (0, "Background"),
     (255, 0, 0): (1, "Alligator"),
@@ -34,15 +35,6 @@ COLOR_MAP = {
     (0, 255, 0): (3, "Longitudinal Crack"),
     (139, 69, 19): (4, "Pothole"),
     (255, 165, 0): (5, "Patches"),
-    # (255, 0, 255): (6, "Multiple Crack"),
-    # (0, 255, 255): (7, "Spalling"),
-    # (0, 128, 0): (8, "Corner Break"),
-    # (255, 100, 203): (9, "Sealed Joint - T"),
-    # (199, 21, 133): (10, "Sealed Joint - L"),
-    # (128, 0, 128): (11, "Punchout"),
-    # (112, 102, 255): (12, "Popout"),
-    # (255, 255, 255): (13, "Unclassified"),
-    # (255, 215, 0): (14, "Cracking"),
 }
 
 
@@ -50,11 +42,11 @@ def main(imgs_root=None, prediction_save_path=None, weights_path=None, batch_siz
     num_classes = 5 + 1  #14 #5
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    mean = (0.47668327, 0.47668327, 0.47668327)  # 478
-    std = (0.148, 0.148, 0.148)  # 145
+    mean = (0.4766, 0.4766, 0.4766)  # 478
+    std = (0.1454, 0.1454, 0.1454)  # 145
 
     data_transform = A.Compose([
-        # A.Resize(1024, 1024),
+        A.Resize(1024, 419),
         A.Normalize(mean=mean, std=std),
         ToTensorV2(), ])
 
@@ -65,16 +57,17 @@ def main(imgs_root=None, prediction_save_path=None, weights_path=None, batch_siz
 
     model = UNetPP(in_channels=3, num_classes=num_classes, deep_supervision=True, base_channels=64)
     # model = VGG16UNet(num_classes=num_classes, pretrain_backbone=False)
-    model = build_unetpp_model(
-                    encoder="resnet50",   # or efficientnet_b3
-                    pretrained=False,
-                    in_channels=3,
-                    num_classes=num_classes,
-                    dec_ch=320,
-                    use_se=True,
-                    use_attn_gates=True,
-                    deep_supervision=True
-    )
+    # model = build_unetpp_model(
+    #                 encoder="resnet50",   # or efficientnet_b3
+    #                 pretrained=False,
+    #                 in_channels=3,
+    #                 num_classes=num_classes,
+    #                 dec_ch=320,
+    #                 use_se=True,
+    #                 use_attn_gates=True,
+    #                 deep_supervision=True
+    # )
+
     pretrain_weights = torch.load(weights_path, map_location=device)
     if "model" in pretrain_weights:
         model.load_state_dict(pretrain_weights["model"])
@@ -246,9 +239,22 @@ def remove_small_components_multiclass(mask, min_area=200):
 
 
 if __name__ == "__main__":
-    WEIGHTS_PATH = r"y:\Devendra_Files\segmentation_training\weights\UNet_resnet\6junetpp_resnet_b4_best_epoch13_dice0.657.pth"
+    WEIGHTS_PATH = r"D:\Devendra_Files\segmentation_training\weights\Unet30June\30junetpp_best_epoch46_dice0.701.pth"
     BATCH_SIZE = 4
-    main(imgs_root=r"Z:\Devendra\ASPHALT\SPLIT\VAL\IMAGES",
-         prediction_save_path=r"Z:\Devendra\ASPHALT\5June",
-         weights_path=WEIGHTS_PATH,
-         batch_size=BATCH_SIZE)
+    # main(imgs_root=r"Z:\Devendra\ASPHALT\NEWTRAINING\SPLIT\VAL\IMAGES",
+    #      prediction_save_path=r"Z:\Devendra\ASPHALT\NEWTRAINING\SPLIT\VAL\IMAGES_RESULT",
+    #      weights_path=WEIGHTS_PATH,
+    #      batch_size=BATCH_SIZE)
+    #
+    # main(imgs_root=r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\IMAGES",
+    #      prediction_save_path=r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\IMAGES_RESULT",
+    #      weights_path=WEIGHTS_PATH,
+    #      batch_size=BATCH_SIZE
+    #      )
+
+    main(
+        imgs_root=r"Z:\Devendra\ASPHALT\NEWTESTING\IMAGES",
+        prediction_save_path=r"Z:\Devendra\ASPHALT\NEWTESTING\IMAGES_RESULT",
+        weights_path=WEIGHTS_PATH,
+        batch_size=BATCH_SIZE
+    )
