@@ -4,16 +4,17 @@ import numpy as np
 import shutil
 
 # Paths
-mask_folder = r"D:\cracks\Semantic-Segmentation of pavement distress dataset\Combined\OG_DATASET_CONCRETE\ACCEPTED_MASKS"
-output_mask_folder = r"D:\cracks\Semantic-Segmentation of pavement distress dataset\Combined\OG_DATASET_CONCRETE\ACCEPTED_MASKS_COPY"
-image_folder = r"D:\cracks\Semantic-Segmentation of pavement distress dataset\Combined\OG_DATASET_CONCRETE\ACCEPTED_IMAGES"
-output_image_folder = r"D:\cracks\Semantic-Segmentation of pavement distress dataset\Combined\OG_DATASET_CONCRETE\ACCEPTED_IMAGES_COPY"
+mask_folder = r"Z:\Devendra\ASPHALT\TRAIN_MIX\MASKS"
+output_mask_folder = r"Z:\Devendra\ASPHALT\TRAIN_MIX\MASKS"
+
+image_folder = r"Z:\Devendra\ASPHALT\TRAIN_MIX\IMAGES"
+output_image_folder = r"Z:\Devendra\ASPHALT\TRAIN_MIX\IMAGES"
 
 os.makedirs(output_mask_folder, exist_ok=True)
 os.makedirs(output_image_folder, exist_ok=True)
 
 # --- Target classes (IDs) ---
-target_classes = {2, 4, 5, 7, 8, 11, 12}
+target_classes = {2,3}
 
 # --- Color map (RGB) → (ID, Name) ---
 COLOR_MAP = {

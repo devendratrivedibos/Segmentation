@@ -2,6 +2,8 @@ import os
 import pdb
 import cv2
 import shutil
+import matplotlib
+matplotlib.use("TkAgg")   # or "TkAgg"
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button, TextBox
 import re
@@ -19,21 +21,16 @@ pcams_dir = os.path.join(root_dir, 'pcams')
 
 # --- Example multiple folders ---
 image_dirs = [
-# r"Z:\Devendra\ASPHALT\NEWTRAINING\SPLIT\VAL\IMAGES",
-# r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\IMAGES",
-r"Z:\Devendra\ASPHALT\NEWTESTING\IMAGES"
+r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\IMAGES"
 ]
 
 orig_mask_dirs = [
-# r"Z:\Devendra\ASPHALT\NEWTRAINING\SPLIT\VAL\MASKS",
-# r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\MASKS",
-r"Z:\Devendra\ASPHALT\NEWTESTING\MASKS"
+r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\ORIGINAL_GROUND_MASKS"
 ]
 
+                                                                                      
 pred_mask_dirs = [
-# r"Z:\Devendra\ASPHALT\NEWTRAINING\SPLIT\VAL\IMAGES_RESULT",
-# r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\IMAGES_RESULT",
-r"Z:\Devendra\ASPHALT\NEWTESTING\IMAGES_RESULT"
+r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\PRED_MASKS"
 ]
 
 # --- Output dirs ---

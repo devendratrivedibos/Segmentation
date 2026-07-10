@@ -13,9 +13,9 @@ from concurrent.futures import ThreadPoolExecutor
 import gc
 
 # --- CONFIG ---
-root_dir = r"D:"
-image_dir = r"Z:\Devendra\ASPHALT\NEWTRAINING\Project\JPEGImages"
-mask_dir = r"Z:\Devendra\ASPHALT\NEWTRAINING\Project\SegmentationClass"
+root_dir = r"D:/"
+image_dir = r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\IMAGES"
+mask_dir = r"Z:\Devendra\ASPHALT\TRAININGNEW\MASKS"
 pcams_dir = os.path.join(root_dir, 'pcams')
 pcams_dir =  "Z:\Devendra\CONCRETE\ACCEPTED_MASKS"
 start_number = 0

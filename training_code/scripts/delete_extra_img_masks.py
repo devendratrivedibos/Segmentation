@@ -12,6 +12,7 @@ MASK_DIR = r"Z:\Devendra\ASPHALT\TRAIN_MIX\MASKS"
 IMGS_TO_REMOVE = {
     (0,),      # Background only
     (0, 1),    # Background + Alligator only
+    (0, 5),  # Background + Patches
 }
 
 COLOR_MAP = {

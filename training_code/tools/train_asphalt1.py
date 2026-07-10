@@ -34,12 +34,12 @@ from models.unet.UnetPP_backbone import build_unetpp_model
 
 
 project_root_ = Path(__file__).resolve().parent.parent.parent
-OUTPUT_SAVE_PATH = project_root_ / 'weights' / 'Unet30June'  # Change this to your desired output path
-model_name = "30junetpp"  # Change this to your desired model name
+OUTPUT_SAVE_PATH = project_root_ / 'weights' / '4july'  # Change this to your desired output path
+model_name = "4july"  # Change this to your desired model name
 os.makedirs(OUTPUT_SAVE_PATH, exist_ok=True)
 CHECKPOINT_FILE = OUTPUT_SAVE_PATH / "latest_checkpoint.pth"
 
-counts_file = project_root_ / "weights" / "class_counts.pt"
+counts_file = project_root_ / "weights" / "class_counts_asphalt.pt"
 
 
 def get_transform(train, mean=(0.487, 0.487, 0.487), std=(0.145, 0.145, 0.145)):
@@ -93,8 +93,8 @@ def main(args):
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     # segmentation nun_classes + background
     num_classes = args.num_classes + 1
-    mean = (0.4736, 0.4736, 0.4736)  # 478
-    std = (0.145, 0.145, 0.145)  # 145
+    mean = (0.4787, 0.4787, 0.4787)  # 478
+    std = (0.1472, 0.1472, 0.1472)  # 145
 
     num_workers = min([os.cpu_count(), args.batch_size if args.batch_size > 1 else 0, 8])
     train_dataset = CrackDataset(args.data_path,
@@ -301,7 +301,7 @@ Parse command-line arguments for training configuration.
     parser = argparse.ArgumentParser(description="pytorch unet training")
     parser.add_argument("--device", default="cuda:0", help="training device")
     parser.add_argument("--data-path",
-                        default=r"G:\Devendra\ASPHALT\TRAIN_MIX\\SPLIT",
+                        default=r"G:\Devendra\ASPHALT\TRAIN_MIX\SPLIT",
                         help="root")
     parser.add_argument("--num-classes", default=5, type=int)  # exclude background
     parser.add_argument("--aux", default=True, type=bool, help="deeplabv3 auxilier loss")

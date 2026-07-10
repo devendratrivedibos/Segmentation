@@ -231,8 +231,8 @@ if __name__ == "__main__":
     BATCH_SIZE = 4
 
     main(
-        imgs_root=r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\IMAGES",
-        prediction_save_path=r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\ONLY_ALLIGATOR",
+        imgs_root=r"Z:\Devendra\ASPHALT\TRAININGNEW\IMAGES",
+        prediction_save_path=r"Z:\Devendra\ASPHALT\TRAININGNEW\ONLY_ALLIGATOR",
         weights_path=WEIGHTS_PATH,
         batch_size=BATCH_SIZE
     )

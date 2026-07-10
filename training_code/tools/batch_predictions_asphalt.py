@@ -30,7 +30,7 @@ from models.unet.UnetPP_backbone import build_unetpp_model
 
 COLOR_MAP = {
     (0, 0, 0): (0, "Background"),
-    # (255, 0, 0): (1, "Alligator"),
+    (255, 0, 0): (1, "Alligator"),
     (0, 0, 255): (2, "Transverse Crack"),
     (0, 255, 0): (3, "Longitudinal Crack"),
     (139, 69, 19): (4, "Pothole"),
@@ -42,8 +42,8 @@ def main(imgs_root=None, prediction_save_path=None, weights_path=None, batch_siz
     num_classes = 5 + 1  #14 #5
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    mean = (0.4736, 0.4736, 0.4736)  # 478
-    std = (0.145, 0.145, 0.145)  # 145
+    mean = (0.4787, 0.4787, 0.4787)  # 478
+    std = (0.1472, 0.1472, 0.1472)  # 145
 
     data_transform = A.Compose([
         # A.Resize(1024, 419),
@@ -239,12 +239,12 @@ def remove_small_components_multiclass(mask, min_area=200):
 
 
 if __name__ == "__main__":
-    WEIGHTS_PATH = r"D:\Devendra_Files\segmentation_training\weights\asp_2may.pth"
+    WEIGHTS_PATH = r"D:\Devendra_Files\segmentation_training\weights\4july\latest_checkpoint.pth"
     BATCH_SIZE = 4
 
     main(
         imgs_root=r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\IMAGES",
-        prediction_save_path=r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\EXCEPT_ALLIGATOR",
+        prediction_save_path=r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\PRED_MASKS",
         weights_path=WEIGHTS_PATH,
         batch_size=BATCH_SIZE
     )

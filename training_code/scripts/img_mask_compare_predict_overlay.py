@@ -1,6 +1,8 @@
 import os
 import pdb
 import cv2
+import matplotlib
+matplotlib.use("TkAgg")   # or "TkAgg"
 import shutil
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button, TextBox
