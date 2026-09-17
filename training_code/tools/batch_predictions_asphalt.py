@@ -35,6 +35,7 @@ COLOR_MAP = {
     (0, 255, 0): (3, "Longitudinal Crack"),
     (139, 69, 19): (4, "Pothole"),
     (255, 165, 0): (5, "Patches"),
+    (255, 255, 255): (6, "unclassified"),
 }
 
 
