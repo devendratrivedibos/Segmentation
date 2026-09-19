@@ -4,8 +4,8 @@ import cv2
 # ==========================
 # Configuration
 # ==========================
-IMAGE_DIR = r"Z:\Devendra\ASPHALT\TRAININGNEW\IMAGES"
-MASK_DIR = r"Z:\Devendra\ASPHALT\TRAININGNEW\MASKS"
+IMAGE_DIR = r"G:\Devendra\ASPHALT\TRAININGNEW\IMAGES"
+MASK_DIR = r"G:\Devendra\ASPHALT\TRAININGNEW\MASKS"
 
 TARGET_WIDTH = 419
 TARGET_HEIGHT = 1024

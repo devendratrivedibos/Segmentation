@@ -3,7 +3,6 @@ This script processes a batch of images for semantic segmentation using a pre-tr
 It reads images from a specified directory, applies necessary transformations,
 and generates segmentation masks. The predicted masks
 """
-
 from tqdm import tqdm
 from random import shuffle
 import sys
@@ -14,11 +13,11 @@ import numpy as np
 import torch
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
+
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(project_root, '..'))
+
 from models.unet.UnetPP import UNetPP
-from models.unet.UnetPP import UNetPP
-from models.unet.UnetPP_backbone import build_unetpp_model
 
 COLOR_MAP = {
     (0, 0, 0): (0, "Background"),
@@ -49,18 +48,6 @@ def main(imgs_root=None, prediction_save_path=None, weights_path=None, batch_siz
     os.makedirs(prediction_save_path, exist_ok=True)
 
     model = UNetPP(in_channels=3, num_classes=num_classes, deep_supervision=True, base_channels=64)
-    # model = VGG16UNet(num_classes=num_classes, pretrain_backbone=False)
-    # model = build_unetpp_model(
-    #                 encoder="resnet50",   # or efficientnet_b3
-    #                 pretrained=False,
-    #                 in_channels=3,
-    #                 num_classes=num_classes,
-    #                 dec_ch=320,
-    #                 use_se=True,
-    #                 use_attn_gates=True,
-    #                 deep_supervision=True
-    # )
-
     pretrain_weights = torch.load(weights_path, map_location=device)
     if "model" in pretrain_weights:
         model.load_state_dict(pretrain_weights["model"])
@@ -89,13 +76,22 @@ def main(imgs_root=None, prediction_save_path=None, weights_path=None, batch_siz
             batch_tensor = torch.stack(batch_imgs).to(device)
             outputs = model(batch_tensor)
             preds = outputs['out'].argmax(1).cpu().numpy().astype(np.uint8)
-            preds[np.isin(preds, [1])] = 0
 
             # postprocess + save
             for pred, fname in zip(preds, orig_names):
                 # pred = cv2.resize(pred, (419, 1024), interpolation=cv2.INTER_NEAREST)
                 # pred = join_directional_multiclass(pred, radius=25, line_width=2)  # ⬅️ Added here
                 pred = remove_small_components_multiclass(pred, min_area=50)
+
+                # Merge Green/Blue cracks into Red when they touch Red
+                pred = merge_cracks_into_red(
+                    pred,
+                    red_cls=1,
+                    blue_cls=2,
+                    green_cls=3,
+                    touch_radius=1
+                )
+
                 pred_color = colorize_prediction(pred)
                 save_path = os.path.join(prediction_save_path, fname.split('.')[0] + '.png')
                 cv2.imwrite(save_path, cv2.cvtColor(pred_color, cv2.COLOR_RGB2BGR))
@@ -231,14 +227,70 @@ def remove_small_components_multiclass(mask, min_area=200):
     cleaned[mask == 12] = 12
     return cleaned
 
+def merge_cracks_into_red(mask, red_cls=1, blue_cls=2, green_cls=3, touch_radius=1):
+    """
+    Merge Green (Longitudinal) and Blue (Transverse) crack components
+    into Red (Alligator) when they touch a Red component.
+
+    Classes:
+        1 = Red / Alligator
+        2 = Blue / Transverse Crack
+        3 = Green / Longitudinal Crack
+
+    If a Green or Blue connected component touches Red,
+    the entire component is converted to Red.
+    """
+
+    result = mask.copy()
+
+    # ---------------------------------------------------------
+    # Red mask
+    # ---------------------------------------------------------
+    red_mask = (mask == red_cls).astype(np.uint8)
+
+    # Dilate red slightly so touching/adjacent pixels are detected
+    kernel_size = touch_radius * 2 + 1
+    kernel = np.ones((kernel_size, kernel_size), np.uint8)
+
+    red_dilated = cv2.dilate(red_mask, kernel, iterations=1)
+
+    # ---------------------------------------------------------
+    # Process Green and Blue
+    # ---------------------------------------------------------
+    for cls in [green_cls, blue_cls]:
+
+        class_mask = (mask == cls).astype(np.uint8)
+
+        num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
+            class_mask,
+            connectivity=8
+        )
+
+        for component_id in range(1, num_labels):
+
+            component = (labels == component_id)
+
+            # Check whether this component touches/is adjacent to red
+            component_uint8 = component.astype(np.uint8)
+
+            touching_red = np.any(
+                component_uint8 & red_dilated
+            )
+
+            if touching_red:
+                # Convert complete component to Red
+                result[component] = red_cls
+
+    return result
+
 
 if __name__ == "__main__":
-    WEIGHTS_PATH = r"C:\Devendra\Segmentation\weights\17sept_best_epoch131_dice0.817.pth"
+    WEIGHTS_PATH = r"D:\Devendra_Files\segmentation_training\weights\18sept\18sept_best_epoch89_dice0.796.pth"
     BATCH_SIZE = 4
 
     main(
-        imgs_root=r"C:\Sidhesh\Distress\Asphalt\Extra Training Data\MANGAWAN-UPBORDER_2025-12-22_11-59-50\Data",
-        prediction_save_path=r"C:\Sidhesh\Distress\Asphalt\Extra Training Data\MANGAWAN-UPBORDER_2025-12-22_11-59-50\pred",
+        imgs_root=r"C:\Users\Admin\Downloads\New folder",
+        prediction_save_path=r"C:\Users\Admin\Downloads\New folderPRED_MASKS",
         weights_path=WEIGHTS_PATH,
         batch_size=BATCH_SIZE
     )

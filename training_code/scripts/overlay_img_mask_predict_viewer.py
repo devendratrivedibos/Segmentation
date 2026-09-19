@@ -30,7 +30,7 @@ r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\ORIGINAL_GROUND_MASKS"
 
                                                                                       
 pred_mask_dirs = [
-r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\PRED_MASKS"
+r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\PRED_MASKS_ONNX"
 ]
 
 # --- Output dirs ---
