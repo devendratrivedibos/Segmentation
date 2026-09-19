@@ -11,6 +11,11 @@ Output:
 ONNX model:
     .onnx
     .onnx.data  <-- automatically loaded by ONNX Runtime
+
+Post-processing:
+    1. Remove small components
+    2. If Blue touches Red -> Blue becomes Red
+    3. If Green touches Red -> Green becomes Red
 """
 
 import os
@@ -26,17 +31,15 @@ from tqdm import tqdm
 # =====================================================================
 
 ONNX_MODEL_PATH = (
-    r"D:\Devendra_Files\segmentation_training\weights\25Aug\25Aug_best_epoch92_dice.onnx"
+    r"D:\Devendra_Files\segmentation_training\weights\18sept\18sept_best_epoch89.onnx"
 )
 
 IMAGES_ROOT = (
-    r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test"
-    r"\IMAGES"
+    r"C:\Users\Admin\Downloads"
 )
 
 PREDICTION_SAVE_PATH = (
-    r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test"
-    r"\PRED_MASKS_ONNX"
+    r"C:\Users\Admin\Downloads\PRED_MASKS_ONNX"
 )
 
 BATCH_SIZE = 4
@@ -46,35 +49,58 @@ INPUT_WIDTH = 419
 
 
 # =====================================================================
+# POST-PROCESSING CONFIG
+# =====================================================================
+
+# Minimum connected-component area to keep
+MIN_COMPONENT_AREA = 50
+
+# Distance used to determine whether Blue/Green touches Red.
+#
+# 1 = directly touching / 1-pixel neighborhood
+# 2 = allow approximately 2-pixel gap
+# 3 = allow approximately 3-pixel gap
+#
+TOUCH_DISTANCE = 1
+
+
+# =====================================================================
 # CLASS / COLOR MAP
 # =====================================================================
 
 COLOR_MAP = {
+
+    # Background
     (0, 0, 0): (
         0,
         "Background"
     ),
 
+    # Red
     (255, 0, 0): (
         1,
         "Alligator"
     ),
 
+    # Blue
     (0, 0, 255): (
         2,
         "Transverse Crack"
     ),
 
+    # Green
     (0, 255, 0): (
         3,
         "Longitudinal Crack"
     ),
 
+    # Brown
     (139, 69, 19): (
         4,
         "Pothole"
     ),
 
+    # Orange
     (255, 165, 0): (
         5,
         "Patches"
@@ -106,6 +132,10 @@ def create_onnx_session(model_path):
     print("=" * 70)
     print("LOADING ONNX MODEL")
     print("=" * 70)
+
+    # ---------------------------------------------------------------
+    # Check ONNX model
+    # ---------------------------------------------------------------
 
     if not os.path.isfile(model_path):
 
@@ -145,18 +175,29 @@ def create_onnx_session(model_path):
     # Available providers
     # ---------------------------------------------------------------
 
-    available_providers = ort.get_available_providers()
+    available_providers = (
+        ort.get_available_providers()
+    )
 
-    print("\nAvailable ONNX Runtime providers:")
+    print(
+        "\nAvailable ONNX Runtime providers:"
+    )
 
     for provider in available_providers:
-        print("  ", provider)
+
+        print(
+            "  ",
+            provider
+        )
 
     # ---------------------------------------------------------------
     # Select CUDA if available
     # ---------------------------------------------------------------
 
-    if "CUDAExecutionProvider" in available_providers:
+    if (
+        "CUDAExecutionProvider"
+        in available_providers
+    ):
 
         providers = [
             "CUDAExecutionProvider",
@@ -174,7 +215,8 @@ def create_onnx_session(model_path):
         ]
 
         print(
-            "\nCUDAExecutionProvider not available."
+            "\nCUDAExecutionProvider "
+            "not available."
         )
 
         print(
@@ -190,7 +232,9 @@ def create_onnx_session(model_path):
         providers=providers
     )
 
-    print("\nONNX model loaded successfully.")
+    print(
+        "\nONNX model loaded successfully."
+    )
 
     return session
 
@@ -201,9 +245,17 @@ def create_onnx_session(model_path):
 
 def print_model_info(session):
 
-    print("\n" + "=" * 70)
-    print("ONNX MODEL INFORMATION")
-    print("=" * 70)
+    print(
+        "\n" + "=" * 70
+    )
+
+    print(
+        "ONNX MODEL INFORMATION"
+    )
+
+    print(
+        "=" * 70
+    )
 
     # ---------------------------------------------------------------
     # Input
@@ -214,6 +266,7 @@ def print_model_info(session):
     for inp in inputs:
 
         print("\nInput:")
+
         print(
             f"  Name : {inp.name}"
         )
@@ -235,6 +288,7 @@ def print_model_info(session):
     for out in outputs:
 
         print("\nOutput:")
+
         print(
             f"  Name : {out.name}"
         )
@@ -277,10 +331,10 @@ def preprocess_image(image_path):
     # ---------------------------------------------------------------
     # Resize
     #
-    # Your PyTorch script assumes images are already 1024 x 419
-    # because A.Resize() is commented out.
+    # ONNX model expects:
     #
-    # ONNX model expects 1024 x 419.
+    # H = 1024
+    # W = 419
     # ---------------------------------------------------------------
 
     if (
@@ -308,13 +362,6 @@ def preprocess_image(image_path):
 
     # ---------------------------------------------------------------
     # Normalize
-    #
-    # Same as:
-    #
-    # A.Normalize(
-    #     mean=(0.4787,...),
-    #     std=(0.1472,...)
-    # )
     # ---------------------------------------------------------------
 
     image = (
@@ -392,7 +439,7 @@ def remove_small_components_multiclass(
     Remove small connected components for each
     foreground class.
 
-    Class 0 = Background
+    Class 0 = Background.
     """
 
     cleaned = np.zeros_like(
@@ -406,13 +453,21 @@ def remove_small_components_multiclass(
 
     for cls in np.unique(mask):
 
-        # Background
+        # -----------------------------------------------------------
+        # Skip background
+        # -----------------------------------------------------------
+
         if cls == 0:
+
             continue
 
         class_mask = (
             mask == cls
         ).astype(np.uint8)
+
+        # -----------------------------------------------------------
+        # Connected components
+        # -----------------------------------------------------------
 
         num_labels, labels, stats, _ = (
             cv2.connectedComponentsWithStats(
@@ -445,6 +500,176 @@ def remove_small_components_multiclass(
 
 
 # =====================================================================
+# MERGE BLUE / GREEN INTO RED
+# =====================================================================
+
+def merge_touching_cracks_into_red(
+    mask,
+    red_cls=1,
+    blue_cls=2,
+    green_cls=3,
+    touch_distance=1
+):
+
+    """
+    Convert an entire Blue or Green connected component
+    to Red when that component touches Red.
+
+    Classes:
+
+        1 = Red
+            Alligator
+
+        2 = Blue
+            Transverse Crack
+
+        3 = Green
+            Longitudinal Crack
+
+
+    Rules:
+
+        Blue touching Red
+            ->
+        entire Blue component becomes Red
+
+
+        Green touching Red
+            ->
+        entire Green component becomes Red
+
+
+        Blue NOT touching Red
+            ->
+        remains Blue
+
+
+        Green NOT touching Red
+            ->
+        remains Green
+
+
+    touch_distance:
+
+        1 = directly touching / adjacent
+        2 = allow small 2-pixel gap
+        3 = allow small 3-pixel gap
+    """
+
+    # ---------------------------------------------------------------
+    # Make a copy so original mask is not modified
+    # ---------------------------------------------------------------
+
+    result = mask.copy()
+
+    # ---------------------------------------------------------------
+    # Create Red mask
+    # ---------------------------------------------------------------
+
+    red_mask = (
+        mask == red_cls
+    ).astype(np.uint8)
+
+    # ---------------------------------------------------------------
+    # Dilate Red mask
+    #
+    # This allows us to detect Blue/Green components
+    # that are touching or very close to Red.
+    # ---------------------------------------------------------------
+
+    kernel_size = (
+        2 * touch_distance + 1
+    )
+
+    kernel = np.ones(
+        (
+            kernel_size,
+            kernel_size
+        ),
+        dtype=np.uint8
+    )
+
+    red_dilated = cv2.dilate(
+        red_mask,
+        kernel,
+        iterations=1
+    )
+
+    # ---------------------------------------------------------------
+    # Process:
+    #
+    # Blue = 2
+    # Green = 3
+    # ---------------------------------------------------------------
+
+    for cls in (
+        blue_cls,
+        green_cls
+    ):
+
+        # -----------------------------------------------------------
+        # Create class mask
+        # -----------------------------------------------------------
+
+        class_mask = (
+            mask == cls
+        ).astype(np.uint8)
+
+        # -----------------------------------------------------------
+        # Find connected components
+        # -----------------------------------------------------------
+
+        num_labels, labels, stats, _ = (
+            cv2.connectedComponentsWithStats(
+                class_mask,
+                connectivity=8
+            )
+        )
+
+        # -----------------------------------------------------------
+        # Check each component
+        # -----------------------------------------------------------
+
+        for component_id in range(
+            1,
+            num_labels
+        ):
+
+            component_mask = (
+                labels == component_id
+            )
+
+            # -------------------------------------------------------
+            # Check whether this component touches Red
+            # -------------------------------------------------------
+
+            component_uint8 = (
+                component_mask.astype(
+                    np.uint8
+                )
+            )
+
+            touching_red = np.any(
+                component_uint8 &
+                red_dilated
+            )
+
+            # -------------------------------------------------------
+            # If touching Red:
+            #
+            # Entire component -> Red
+            # -------------------------------------------------------
+
+            if touching_red:
+
+                result[
+                    component_mask
+                ] = red_cls
+
+    return result
+
+
+# =====================================================================
 # PROCESS BATCH
 # =====================================================================
 
@@ -458,7 +683,9 @@ def process_batch(
 ):
 
     # ---------------------------------------------------------------
-    # Stack:
+    # Stack images
+    #
+    # Expected:
     #
     # [B, 3, 1024, 419]
     # ---------------------------------------------------------------
@@ -501,10 +728,9 @@ def process_batch(
     # ---------------------------------------------------------------
     # Argmax
     #
-    # Same as:
+    # Same as PyTorch:
     #
     # outputs['out'].argmax(1)
-    #
     # ---------------------------------------------------------------
 
     predictions = np.argmax(
@@ -521,26 +747,48 @@ def process_batch(
         batch_names
     ):
 
-        # -----------------------------------------------------------
+        # ===========================================================
+        # STEP 1
         # Remove small components
-        # -----------------------------------------------------------
+        # ===========================================================
 
-        pred = remove_small_components_multiclass(
-            pred,
-            min_area=50
+        pred = (
+            remove_small_components_multiclass(
+                pred,
+                min_area=MIN_COMPONENT_AREA
+            )
         )
 
-        # -----------------------------------------------------------
+        # ===========================================================
+        # STEP 2
+        # Merge Blue / Green into Red
+        #
+        # Blue  -> Red if touching Red
+        # Green -> Red if touching Red
+        # ===========================================================
+
+        pred = (
+            merge_touching_cracks_into_red(
+                pred,
+                red_cls=1,
+                blue_cls=2,
+                green_cls=3,
+                touch_distance=TOUCH_DISTANCE
+            )
+        )
+
+        # ===========================================================
+        # STEP 3
         # Colorize
-        # -----------------------------------------------------------
+        # ===========================================================
 
         pred_color = colorize_prediction(
             pred
         )
 
-        # -----------------------------------------------------------
+        # ===========================================================
         # Output filename
-        # -----------------------------------------------------------
+        # ===========================================================
 
         base_name = os.path.splitext(
             fname
@@ -551,9 +799,9 @@ def process_batch(
             base_name + ".png"
         )
 
-        # -----------------------------------------------------------
+        # ===========================================================
         # RGB -> BGR before OpenCV save
-        # -----------------------------------------------------------
+        # ===========================================================
 
         cv2.imwrite(
             save_path,
@@ -575,21 +823,85 @@ def main(
     batch_size=4
 ):
 
-    print("\n" + "=" * 70)
-    print("UNET++ ONNX RUNTIME SEGMENTATION")
-    print("=" * 70)
+    print(
+        "\n" + "=" * 70
+    )
 
-    print("\nImages:")
-    print(imgs_root)
+    print(
+        "UNET++ ONNX RUNTIME SEGMENTATION"
+    )
 
-    print("\nOutput:")
-    print(prediction_save_path)
+    print(
+        "=" * 70
+    )
 
-    print("\nONNX:")
-    print(onnx_model_path)
+    print(
+        "\nImages:"
+    )
 
-    print("\nBatch size:")
-    print(batch_size)
+    print(
+        imgs_root
+    )
+
+    print(
+        "\nOutput:"
+    )
+
+    print(
+        prediction_save_path
+    )
+
+    print(
+        "\nONNX:"
+    )
+
+    print(
+        onnx_model_path
+    )
+
+    print(
+        "\nBatch size:"
+    )
+
+    print(
+        batch_size
+    )
+
+    print(
+        "\nInput size:"
+    )
+
+    print(
+        f"{INPUT_HEIGHT} x {INPUT_WIDTH}"
+    )
+
+    print(
+        "\nMinimum component area:"
+    )
+
+    print(
+        MIN_COMPONENT_AREA
+    )
+
+    print(
+        "\nTouch distance:"
+    )
+
+    print(
+        TOUCH_DISTANCE
+    )
+
+    print(
+        "\nPost-processing:"
+    )
+
+    print(
+        "  Blue  -> Red when touching Red"
+    )
+
+    print(
+        "  Green -> Red when touching Red"
+    )
 
     # ---------------------------------------------------------------
     # Create output directory
@@ -609,7 +921,7 @@ def main(
     )
 
     # ---------------------------------------------------------------
-    # Print model info
+    # Print model information
     # ---------------------------------------------------------------
 
     print_model_info(
@@ -620,15 +932,29 @@ def main(
     # Input / Output names
     # ---------------------------------------------------------------
 
-    input_name = session.get_inputs()[0].name
+    input_name = (
+        session.get_inputs()[0].name
+    )
 
-    output_name = session.get_outputs()[0].name
+    output_name = (
+        session.get_outputs()[0].name
+    )
 
-    print("\nUsing input name:")
-    print(input_name)
+    print(
+        "\nUsing input name:"
+    )
 
-    print("\nUsing output name:")
-    print(output_name)
+    print(
+        input_name
+    )
+
+    print(
+        "\nUsing output name:"
+    )
+
+    print(
+        output_name
+    )
 
     # ---------------------------------------------------------------
     # Collect images
@@ -636,7 +962,9 @@ def main(
 
     images_list = [
         img
-        for img in os.listdir(imgs_root)
+        for img in os.listdir(
+            imgs_root
+        )
         if img.lower().endswith(
             (
                 ".png",
@@ -647,11 +975,7 @@ def main(
     ]
 
     # ---------------------------------------------------------------
-    # Keep deterministic order
-    #
-    # Your PyTorch code used shuffle().
-    # If you want EXACTLY the same random behavior,
-    # use random.shuffle(images_list).
+    # Deterministic order
     # ---------------------------------------------------------------
 
     images_list.sort()
@@ -684,9 +1008,11 @@ def main(
             batch_size
         ):
 
-            batch_files = images_list[
-                i:i + batch_size
-            ]
+            batch_files = (
+                images_list[
+                    i:i + batch_size
+                ]
+            )
 
             batch_imgs = []
             batch_names = []
@@ -704,8 +1030,10 @@ def main(
 
                 try:
 
-                    image = preprocess_image(
-                        image_path
+                    image = (
+                        preprocess_image(
+                            image_path
+                        )
                     )
 
                     batch_imgs.append(
@@ -732,7 +1060,7 @@ def main(
                 continue
 
             # -------------------------------------------------------
-            # Inference
+            # Inference + post-processing
             # -------------------------------------------------------
 
             process_batch(
@@ -741,16 +1069,22 @@ def main(
                 batch_names=batch_names,
                 input_name=input_name,
                 output_name=output_name,
-                prediction_save_path=prediction_save_path
+                prediction_save_path=(
+                    prediction_save_path
+                )
             )
 
             # -------------------------------------------------------
-            # Progress
+            # Update progress
             # -------------------------------------------------------
 
             progress.update(
                 len(batch_imgs)
             )
+
+    # ---------------------------------------------------------------
+    # Complete
+    # ---------------------------------------------------------------
 
     print(
         "\n" + "=" * 70
