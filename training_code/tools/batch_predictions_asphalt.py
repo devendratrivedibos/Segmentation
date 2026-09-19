@@ -3,6 +3,7 @@ This script processes a batch of images for semantic segmentation using a pre-tr
 It reads images from a specified directory, applies necessary transformations,
 and generates segmentation masks. The predicted masks
 """
+
 from tqdm import tqdm
 from random import shuffle
 import sys
@@ -13,17 +14,8 @@ import numpy as np
 import torch
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
-
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(project_root, '..'))
-
-# from models.deeplab_v3.deeplabv3 import deeplabv3_resnet101
-# from models.deeplab_v3.deeplabv3 import deeplabv3_mobilenetv3_large
-# from models.segformer.segformer import SegFormer
-# from models.unet.unet import UNet
-# from models.unet.mobilenet_unet import MobileV3Unet
-# from models.unet.vgg_unet import VGG16UNet
-# from models.fcn.fcn import fcn_resnet101
 from models.unet.UnetPP import UNetPP
 from models.unet.UnetPP import UNetPP
 from models.unet.UnetPP_backbone import build_unetpp_model
@@ -35,6 +27,7 @@ COLOR_MAP = {
     (0, 255, 0): (3, "Longitudinal Crack"),
     (139, 69, 19): (4, "Pothole"),
     (255, 165, 0): (5, "Patches"),
+    # (255,255,255): (6, "Unclassified Crack")
 }
 
 
@@ -96,6 +89,7 @@ def main(imgs_root=None, prediction_save_path=None, weights_path=None, batch_siz
             batch_tensor = torch.stack(batch_imgs).to(device)
             outputs = model(batch_tensor)
             preds = outputs['out'].argmax(1).cpu().numpy().astype(np.uint8)
+            preds[np.isin(preds, [1])] = 0
 
             # postprocess + save
             for pred, fname in zip(preds, orig_names):
@@ -239,12 +233,12 @@ def remove_small_components_multiclass(mask, min_area=200):
 
 
 if __name__ == "__main__":
-    WEIGHTS_PATH = r"D:\Devendra_Files\segmentation_training\weights\4july\latest_checkpoint.pth"
+    WEIGHTS_PATH = r"C:\Devendra\Segmentation\weights\17sept_best_epoch131_dice0.817.pth"
     BATCH_SIZE = 4
 
     main(
-        imgs_root=r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\IMAGES",
-        prediction_save_path=r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\PRED_MASKS",
+        imgs_root=r"C:\Sidhesh\Distress\Asphalt\Extra Training Data\MANGAWAN-UPBORDER_2025-12-22_11-59-50\Data",
+        prediction_save_path=r"C:\Sidhesh\Distress\Asphalt\Extra Training Data\MANGAWAN-UPBORDER_2025-12-22_11-59-50\pred",
         weights_path=WEIGHTS_PATH,
         batch_size=BATCH_SIZE
     )

@@ -424,15 +424,15 @@ if __name__ == "__main__":
 
     WEIGHTS_PATH = r"Y:\Devendra_Files\segmentation_training\weights\UNET_concrete_10may.pth"
     BATCH_SIZE = 4
-    main(imgs_root=rf"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\IMAGES",
+    main(imgs_root=rf"C:\Sidhesh\Distress\Asphalt\Extra Training Data\NAGAUR-JODHPUR_2026-05-02_12-13-17\DataSet-2\Dataset_2.1\Data",
          prediction_save_path=rf"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\PRED_10may",
          weights_path=WEIGHTS_PATH,
          batch_size=BATCH_SIZE)
 
-    WEIGHTS_PATH = r"Y:\Devendra_Files\segmentation_training\weights\concrete_best.pth"
-    BATCH_SIZE = 4
-    main(imgs_root=rf"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\IMAGES",
-         prediction_save_path=rf"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\PRED_old",
-         weights_path=WEIGHTS_PATH,
-         batch_size=BATCH_SIZE)
+    # WEIGHTS_PATH = r"Y:\Devendra_Files\segmentation_training\weights\concrete_best.pth"
+    # BATCH_SIZE = 4
+    # main(imgs_root=rf"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\IMAGES",
+    #      prediction_save_path=rf"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\PRED_old",
+    #      weights_path=WEIGHTS_PATH,
+    #      batch_size=BATCH_SIZE)
 

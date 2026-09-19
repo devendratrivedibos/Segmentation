@@ -227,12 +227,12 @@ def remove_small_components_multiclass(mask, min_area=200):
 
 
 if __name__ == "__main__":
-    WEIGHTS_PATH = r"D:\Devendra_Files\segmentation_training\weights\asphalt_best.pth"
-    BATCH_SIZE = 4
-
+    WEIGHTS_PATH = r"C:\Devendra\Segmentation\weights\asphalt_best.pth"
+    # WEIGHTS_PATH = r"D:\Devendra_Files\segmentation_training\weights\25july\25july_best_epoch25_dice0.699.pth"
+    BATCH_SIZE =    4
     main(
-        imgs_root=r"Z:\Devendra\ASPHALT\TRAININGNEW\IMAGES",
-        prediction_save_path=r"Z:\Devendra\ASPHALT\TRAININGNEW\ONLY_ALLIGATOR",
+        imgs_root=r"C:\Sidhesh\Distress\Asphalt\Extra Training Data\MANGAWAN-UPBORDER_2025-12-22_11-59-50\Data",
+        prediction_save_path=r"C:\Sidhesh\Distress\Asphalt\Extra Training Data\MANGAWAN-UPBORDER_2025-12-22_11-59-50\alligator_predictions",
         weights_path=WEIGHTS_PATH,
         batch_size=BATCH_SIZE
     )
