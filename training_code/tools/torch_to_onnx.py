@@ -761,17 +761,11 @@ if __name__ == "__main__":
         model_type="unetpp",
 
         model_path=(
-            r"D:\Devendra_Files"
-            r"\segmentation_training"
-            r"\weights\25Aug"
-            r"\25Aug_best_epoch92_dice0.599.pth"
+            r"D:\Devendra_Files\segmentation_training\weights\18sept\18sept_best_epoch89_dice0.796.pth"
         ),
 
         onnx_path=(
-            r"D:\Devendra_Files"
-            r"\segmentation_training"
-            r"\weights\25Aug"
-            r"\25Aug_best_epoch92_dice.onnx"
+            r"D:\Devendra_Files\segmentation_training\weights\18sept\18sept_best_epoch89.onnx"
         ),
 
         input_size=(
@@ -779,7 +773,7 @@ if __name__ == "__main__":
             419
         ),
 
-        num_classes=7,
+        num_classes=6,
 
         base_channels=64,
 
