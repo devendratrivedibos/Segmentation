@@ -27,7 +27,7 @@ COLOR_MAP = {
     (0, 255, 0): (3, "Longitudinal Crack"),
     (139, 69, 19): (4, "Pothole"),
     (255, 165, 0): (5, "Patches"),
-    (255, 255, 255): (6, "unclassified"),
+    # (255, 255, 255): (6, "unclassified"),
 }
 
 
@@ -237,8 +237,8 @@ if __name__ == "__main__":
     BATCH_SIZE = 4
 
     main(
-        imgs_root=r"C:\Sidhesh\Distress\Asphalt\Extra Training Data\MANGAWAN-UPBORDER_2025-12-22_11-59-50\Data",
-        prediction_save_path=r"C:\Sidhesh\Distress\Asphalt\Extra Training Data\MANGAWAN-UPBORDER_2025-12-22_11-59-50\pred",
+        imgs_root=r"C:\Sidhesh\Distress\Concrete\Priority-1\DATA\SPLIT\set10\JPEGImages",
+        prediction_save_path=r"C:\Sidhesh\Distress\Concrete\Priority-1\DATA\SPLIT\set10\PRED_MASKS",
         weights_path=WEIGHTS_PATH,
         batch_size=BATCH_SIZE
     )

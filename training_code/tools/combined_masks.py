@@ -6,19 +6,19 @@ from pathlib import Path
 
 
 MASK1_FOLDER = Path(
-    r"C:\Sidhesh\Distress\Asphalt\Extra Training Data\MANGAWAN-UPBORDER_2025-12-22_11-59-50\alligator_predictions"
+    r"C:\Sidhesh\Distress\Concrete\Priority-1\DATA\SPLIT\set10\js-masks"
     # r"\NAGAUR-JODHPUR_2026-05-02_12-13-17"
     # r"\SECTION-1-pred-alligator"
 )
 
 MASK2_FOLDER = Path(
-    r"C:\Sidhesh\Distress\Asphalt\Extra Training Data\MANGAWAN-UPBORDER_2025-12-22_11-59-50\pred"
+    r"C:\Sidhesh\Distress\Concrete\Priority-1\DATA\SPLIT\set10\PRED_MASKS"
     # r"\NAGAUR-JODHPUR_2026-05-02_12-13-17"
     # r"\SECTION-1-pred"
 )
 
 OUTPUT_FOLDER = Path(
-    r"C:\Sidhesh\Distress\Asphalt\Extra Training Data\MANGAWAN-UPBORDER_2025-12-22_11-59-50\combined_masks"
+    r"C:\Sidhesh\Distress\Concrete\Priority-1\DATA\SPLIT\set10\COMBINED_MASKS"
     # r"\NAGAUR-JODHPUR_2026-05-02_12-13-17"
     # r"\SECTION-1-combined"
 )

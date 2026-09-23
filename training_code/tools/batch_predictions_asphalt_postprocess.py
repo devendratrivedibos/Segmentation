@@ -26,7 +26,7 @@ COLOR_MAP = {
     (0, 255, 0): (3, "Longitudinal Crack"),
     (139, 69, 19): (4, "Pothole"),
     (255, 165, 0): (5, "Patches"),
-    (255, 255, 255): (6, "unclassified"),
+    # (255, 255, 255): (6, "unclassified"),
 }
 
 
@@ -285,12 +285,12 @@ def merge_cracks_into_red(mask, red_cls=1, blue_cls=2, green_cls=3, touch_radius
 
 
 if __name__ == "__main__":
-    WEIGHTS_PATH = r"D:\Devendra_Files\segmentation_training\weights\18sept\18sept_best_epoch89_dice0.796.pth"
+    WEIGHTS_PATH = r"C:\Devendra\Segmentation\weights\24july_best_epoch32_dice0.591.pth"
     BATCH_SIZE = 4
 
     main(
-        imgs_root=r"C:\Users\Admin\Downloads\New folder",
-        prediction_save_path=r"C:\Users\Admin\Downloads\New folderPRED_MASKS",
+        imgs_root=r"C:\Users\Admin\Downloads\test_19_Sept\JPEGImages",
+        prediction_save_path=r"C:\Users\Admin\Downloads\test_19_Sept\PRED_MASKS_24_JULY",
         weights_path=WEIGHTS_PATH,
         batch_size=BATCH_SIZE
     )
