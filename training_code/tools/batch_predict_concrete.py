@@ -20,7 +20,7 @@ from models.unet.unet import UNet
 from models.unet.mobilenet_unet import MobileV3Unet
 from models.unet.vgg_unet import VGG16UNet
 from models.fcn.fcn import fcn_resnet101
-from models.unet.UnetPP import UNetPP
+from models.unet.UnetPP_old import UNetPP
 from random import shuffle
 
 COLOR_MAP = {
@@ -421,18 +421,10 @@ def extend_joint_seals_to_image_end(mask):
 
 
 if __name__ == "__main__":
-
-    WEIGHTS_PATH = r"Y:\Devendra_Files\segmentation_training\weights\UNET_concrete_10may.pth"
+    WEIGHTS_PATH = r"D:\Devendra_Files\segmentation_training\weights\concrete_best.pth"
     BATCH_SIZE = 4
-    main(imgs_root=rf"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\IMAGES",
-         prediction_save_path=rf"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\PRED_10may",
-         weights_path=WEIGHTS_PATH,
-         batch_size=BATCH_SIZE)
-
-    WEIGHTS_PATH = r"Y:\Devendra_Files\segmentation_training\weights\concrete_best.pth"
-    BATCH_SIZE = 4
-    main(imgs_root=rf"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\IMAGES",
-         prediction_save_path=rf"Z:\Devendra\CONCRETE\COMBINED_SPLITTED\TRAIN\SPLIT\VAL\PRED_old",
+    main(imgs_root=rf"Z:\Devendra\CONCRETE\IMAGES_OLD",
+         prediction_save_path=rf"Z:\Devendra\CONCRETE\IMAGES_OLD\PRED_old",
          weights_path=WEIGHTS_PATH,
          batch_size=BATCH_SIZE)
 

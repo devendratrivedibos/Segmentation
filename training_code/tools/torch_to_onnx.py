@@ -3,7 +3,7 @@ import sys
 import torch
 import onnx
 
-from ultralytics import YOLO
+# from ultralytics import YOLO
 
 # ------------------------------------------------------------------
 # PROJECT ROOT
@@ -765,7 +765,7 @@ if __name__ == "__main__":
         ),
 
         onnx_path=(
-            r"D:\Devendra_Files\segmentation_training\weights\18sept\18sept_best_epoch89.onnx"
+            r"D:\Devendra_Files\segmentation_training\weights\18sept\18sept_asphalt.onnx"
         ),
 
         input_size=(

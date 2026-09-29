@@ -285,11 +285,11 @@ def merge_cracks_into_red(mask, red_cls=1, blue_cls=2, green_cls=3, touch_radius
 
 
 if __name__ == "__main__":
-    WEIGHTS_PATH = r"D:\Devendra_Files\segmentation_training\weights\18sept\18sept_best_epoch89_dice0.796.pth"
+    WEIGHTS_PATH = r"D:\Devendra_Files\segmentation_training\weights\19sept\19sept_best_epoch421_dice0.607.pth"
     BATCH_SIZE = 4
 
     main(
-        imgs_root=r"C:\Users\Admin\Downloads\New folder",
+        imgs_root=r"C:\Users\Admin\Downloads",
         prediction_save_path=r"C:\Users\Admin\Downloads\New folderPRED_MASKS",
         weights_path=WEIGHTS_PATH,
         batch_size=BATCH_SIZE
