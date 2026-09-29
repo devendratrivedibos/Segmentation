@@ -423,8 +423,10 @@ def extend_joint_seals_to_image_end(mask):
 if __name__ == "__main__":
     WEIGHTS_PATH = r"D:\Devendra_Files\segmentation_training\weights\concrete_best.pth"
     BATCH_SIZE = 4
+
     main(imgs_root=rf"Z:\Devendra\CONCRETE\IMAGES_OLD",
          prediction_save_path=rf"Z:\Devendra\CONCRETE\IMAGES_OLD\PRED_old",
          weights_path=WEIGHTS_PATH,
          batch_size=BATCH_SIZE)
+
 

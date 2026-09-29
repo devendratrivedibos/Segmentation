@@ -21,16 +21,16 @@ pcams_dir = os.path.join(root_dir, 'pcams')
 
 # --- Example multiple folders ---
 image_dirs = [
-r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\IMAGES"
+r"C:\Users\Admin\Downloads\test_19_Sept\JPEGImages"
 ]
 
 orig_mask_dirs = [
-r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\ORIGINAL_GROUND_MASKS"
+r"C:\Users\Admin\Downloads\test_19_Sept\SegmentationClass"
 ]
 
                                                                                       
 pred_mask_dirs = [
-r"Z:\Devendra\ASPHALT\Asphalt_GoldenSet_Test\PRED_MASKS_ONNX"
+r"C:\Users\Admin\Downloads\test_19_Sept\PRED_MASKS_19_SEPT"
 ]
 
 # --- Output dirs ---
@@ -81,7 +81,7 @@ assert len(images) == len(orig_masks) == len(pred_masks)
 
 # --- Shuffle together ---
 combined = list(zip(images, orig_masks, pred_masks))
-random.shuffle(combined)
+# random.shuffle(combined)
 images, orig_masks, pred_masks = zip(*combined)
 images, orig_masks, pred_masks = list(images), list(orig_masks), list(pred_masks)
 
