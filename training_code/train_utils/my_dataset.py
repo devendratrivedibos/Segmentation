@@ -21,13 +21,13 @@ class CrackDataset(Dataset):
     def __init__(self, root: str, train: bool, transforms=None):
         super(CrackDataset, self).__init__()
         data_root = root
-        flag = "TRAIN" if train else "VAL"
+        flag = "TRAIN" if train else "TEST"
 
-        data_root = os.path.join(data_root, flag)
+        data_root = self._resolve_child_dir(data_root, flag)
         assert os.path.exists(data_root), "path '{}' does not exist.".format(data_root)
         # data_root = root
-        imgs_root = os.path.join(data_root, "IMAGES")
-        masks_root = os.path.join(data_root, "MASKS")
+        imgs_root = self._resolve_child_dir(data_root, "IMAGES")
+        masks_root = self._resolve_child_dir(data_root, "MASKS")
 
         self.images_list = os.listdir(imgs_root)
         valid_exts = ['.png', '.jpg', '.jpeg']
@@ -83,6 +83,20 @@ class CrackDataset(Dataset):
             match = np.all(mask_rgb == np.array(color, dtype=np.uint8), axis=-1)
             class_map[match] = class_id
         return class_map
+
+    @staticmethod
+    def _resolve_child_dir(parent, name):
+        direct_path = os.path.join(parent, name)
+        if os.path.isdir(direct_path):
+            return direct_path
+
+        lower_name = name.lower()
+        for child in os.listdir(parent):
+            child_path = os.path.join(parent, child)
+            if os.path.isdir(child_path) and child.lower() == lower_name:
+                return child_path
+
+        return direct_path
 
 
 class SegmentationPresetTrain:
