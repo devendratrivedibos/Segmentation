@@ -9,15 +9,14 @@ from pathlib import Path
 import datetime
 import sys
 from tqdm import tqdm
-
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(project_root, '..'))
-from train_utils.train_and_eval_asphalt import evaluate, create_lr_scheduler, train_one_epoch_loss
-from train_utils.my_dataset import CrackDataset, SegmentationPresetTrain, SegmentationPresetEval
+from train_utils.train_and_eval_asphalt import evaluate, create_lr_scheduler, train_one_epoch_loss, criterion
+from train_utils.my_dataset_concrete import CrackDataset, SegmentationPresetTrain, SegmentationPresetEval, COLOR_MAP
 from train_utils.utils import plot, show_config
 
 # from models.segformer.segformer import SegFormer
@@ -29,6 +28,8 @@ from train_utils.utils import plot, show_config
 # from models.deeplab_v3.deeplabv3 import deeplabv3_mobilenetv3_large
 from models.unet.UnetPP import UNetPP
 from models.unet.UnetPP_backbone import build_unetpp_model
+from clearml import Dataset
+from clearml import Task
 
 # from models.dinov3.dinov3 import DINODeepLab
 
@@ -89,7 +90,60 @@ def save_checkpoint(save_path, epoch, model, optimizer, lr_scheduler, scaler, be
     torch.save(checkpoint, save_path)
 
 
-def main(args):
+def log_segmentation_metrics(logger, split, confmat, dice, epoch, class_names):
+    accuracy, precision, recall, iou, f1 = confmat.compute()
+    logger.report_scalar("accuracy", split, value=accuracy.item(), iteration=epoch)
+    logger.report_scalar("dice", split, value=dice, iteration=epoch)
+    for name, values in (("precision", precision), ("recall", recall), ("IoU", iou), ("F1", f1)):
+        for class_name, value in zip(class_names, values.tolist()):
+            logger.report_scalar(f"{split}/{name}", class_name, value=value, iteration=epoch)
+
+
+def pull_clearml_dataset(args, task=None):
+    dataset_project = args.clearml_dataset_project or args.clearml_project
+    dataset_kwargs = {}
+    if args.clearml_dataset_id:
+        dataset_kwargs["dataset_id"] = args.clearml_dataset_id
+    else:
+        if not args.clearml_dataset_name:
+            raise ValueError(
+                "ClearML dataset is required. Pass --clearml-dataset-id or "
+                "--clearml-dataset-name."
+            )
+        dataset_kwargs["dataset_project"] = dataset_project
+        dataset_kwargs["dataset_name"] = args.clearml_dataset_name
+        if args.clearml_dataset_version:
+            dataset_kwargs["dataset_version"] = args.clearml_dataset_version
+
+    dataset = Dataset.get(**dataset_kwargs)
+    data_path = dataset.get_local_copy()
+
+    dataset_info = {
+        "dataset_project": dataset_project,
+        "dataset_name": args.clearml_dataset_name or "",
+        "dataset_version": args.clearml_dataset_version or "",
+        "dataset_id": dataset.id,
+        "dataset_local_path": data_path,
+    }
+    if task is not None:
+        task.connect(dataset_info, name="Dataset", ignore_remote_overrides=True)
+        task.get_logger().report_text(
+            "Using ClearML dataset "
+            f"id={dataset.id}, project={dataset_info['dataset_project']}, "
+            f"name={dataset_info['dataset_name']}, local_path={data_path}"
+        )
+
+    print("\nUsing ClearML dataset:")
+    for key, value in dataset_info.items():
+        print(f"{key}: {value}")
+
+    args.data_path = data_path
+    return dataset_info
+
+
+def main(args, task=None):
+    logger = task.get_logger() if task is not None else None
+    dataset_info = pull_clearml_dataset(args, task=task)
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     # segmentation nun_classes + background
     num_classes = args.num_classes + 1
@@ -197,13 +251,18 @@ def main(args):
 
     results_file = OUTPUT_SAVE_PATH / "{}-results.txt".format(model_name)
     config_info = {
-        'device': args.device,
+        'device': str(device),
         'data_path': args.data_path,
+        'clearml_dataset_project': dataset_info["dataset_project"],
+        'clearml_dataset_name': dataset_info["dataset_name"],
+        'clearml_dataset_version': dataset_info["dataset_version"],
+        'clearml_dataset_id': dataset_info["dataset_id"],
+        'clearml_dataset_local_path': dataset_info["dataset_local_path"],
         'num_classes': num_classes,
         'model': model.__class__.__name__,
         'backbone_pretrained': args.pretrained,
         'pretrained_weights': args.pretrained_weights,
-        "loss": "cross_entropy(weight=[1.0,2.0])+dice_loss",
+        "loss": repr(criterion),
         'optimizer_type': args.optimizer_type,
         'lr': args.lr,
         'momentum': args.momentum,
@@ -215,8 +274,15 @@ def main(args):
         "warmup_epochs": args.warmup_epochs,
         'weights_save_best': args.save_best,
         'amp': args.amp,
-        'num_workers': num_workers
+        'num_workers': num_workers,
+        'train_samples': len(train_dataset),
+        'val_samples': len(val_dataset),
     }
+
+    class_labels = {index: name for index, name in COLOR_MAP.values()}
+    class_names = [class_labels.get(index, f"class_{index}") for index in range(num_classes)]
+    if task is not None:
+        task.connect(config_info, name="Runtime", ignore_remote_overrides=True)
 
     show_config(config_info)
 
@@ -259,6 +325,11 @@ def main(args):
 
         epoch_end_time = time.time()
         one_epoch_time = epoch_end_time - epoch_start_time
+        if logger is not None:
+            logger.report_scalar("loss", "train", value=mean_loss, iteration=epoch)
+            logger.report_scalar("learning rate", "train", value=lr, iteration=epoch)
+            logger.report_scalar("epoch time (seconds)", "total", value=one_epoch_time, iteration=epoch)
+            log_segmentation_metrics(logger, "val", confmat, dice, epoch, class_names)
         one_epoch_time = str(datetime.timedelta(seconds=int(one_epoch_time)))
         print(f"training epoch {epoch} time {one_epoch_time}")
         # write into txt
@@ -325,6 +396,18 @@ Parse command-line arguments for training configuration.
 
     parser.add_argument('--save-best', default=False, type=bool, help='only save best dice weights')
     parser.add_argument('--resume', default=str(CHECKPOINT_FILE), help='resume from checkpoint')
+    parser.add_argument('--no-clearml', action='store_true', help='disable ClearML tracking')
+    parser.add_argument('--clearml-project', default='c3d-Segmentation')
+    parser.add_argument('--clearml-task-name', default=model_name)
+    parser.add_argument('--clearml-output-uri', default='', help='model upload destination; defaults to ClearML file server')
+    parser.add_argument('--clearml-dataset-project', default='',
+                        help='ClearML dataset project; defaults to --clearml-project')
+    parser.add_argument('--clearml-dataset-name', default='Concrete',
+                        help='ClearML dataset name to download before training')
+    parser.add_argument('--clearml-dataset-version', default='',
+                        help='Optional ClearML dataset version')
+    parser.add_argument('--clearml-dataset-id', default='',
+                        help='Optional ClearML dataset id/hash; overrides project/name/version')
     # Mixed precision training parameters
     parser.add_argument("--amp", default=True, type=bool,
                         help="Use torch.cuda.amp for automatic mixed precision training")
@@ -336,4 +419,20 @@ Parse command-line arguments for training configuration.
 
 if __name__ == '__main__':
     args = parse_args()
-    main(args)
+    task = None
+    if not args.no_clearml:
+        task = Task.init(
+            project_name=args.clearml_project, task_name=args.clearml_task_name,
+            output_uri=args.clearml_output_uri or True,
+            auto_connect_frameworks={"pytorch": False},
+            auto_connect_arg_parser=False, reuse_last_task_id=False)
+        task.connect(args, name="Args")
+    try:
+        main(args, task=task)
+    except Exception as exc:
+        if task is not None:
+            task.mark_failed(status_reason=str(exc))
+        raise
+    finally:
+        if task is not None:
+            task.close()
