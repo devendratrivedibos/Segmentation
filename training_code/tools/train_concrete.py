@@ -35,8 +35,8 @@ from clearml import Task
 
 
 project_root_ = Path(__file__).resolve().parent.parent.parent
-OUTPUT_SAVE_PATH = project_root_ / 'weights' / '4july'  # Change this to your desired output path
-model_name = "4july"  # Change this to your desired model name
+OUTPUT_SAVE_PATH = project_root_ / 'weights' / '15oct'  # Change this to your desired output path
+model_name = "15oct"  # Change this to your desired model name
 os.makedirs(OUTPUT_SAVE_PATH, exist_ok=True)
 CHECKPOINT_FILE = OUTPUT_SAVE_PATH / "latest_checkpoint.pth"
 
@@ -390,7 +390,7 @@ Parse command-line arguments for training configuration.
                         metavar='W', help='weight decay (default: 1e-4)', dest='weight_decay')
     parser.add_argument("-b", "--batch-size", default=8, type=int)
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='start epoch')
-    parser.add_argument("--epochs", default=500, type=int, metavar="N",
+    parser.add_argument("--epochs", default=100, type=int, metavar="N",
                         help="number of total epochs to train")
     parser.add_argument('--print-freq', default=1, type=int, help='print frequency')
 

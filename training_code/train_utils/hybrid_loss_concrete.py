@@ -1157,7 +1157,17 @@ def build_crack_criterion(
                 1.50,   # 2 Transverse
                 1.50,   # 3 Longitudinal
                 1.00,   # 4 Pothole
-                1.00    # 5 Patch
+                1.00 ,
+                1.00,  # 5 Patch
+                                  1.00,
+                                1.00,
+                                 1.00,
+                                1.00,
+                                1.00,
+                                1.00,
+                                1.00,
+                                1.00
+                        # 5 Patch
             ],
             device=device,
             dtype=ce_w.dtype
@@ -1170,18 +1180,34 @@ def build_crack_criterion(
                 1.50,   # 2 Transverse
                 1.50,   # 3 Longitudinal
                 1.00,   # 4 Pothole
-                1.00    # 5 Patch
+                1.00,
+                 1.00,  # 5 Patch
+                  1.00,
+                1.00,
+                 1.00,
+                1.00,
+                1.00,
+                1.00,
+                1.00,
+                1.00
+                
+
+
+
+
+
+
             ],
             device=device,
             dtype=dice_w.dtype
         )
 
         # Safety for different class counts
-        if num_classes != 6:
+        if num_classes != 15:
 
             raise ValueError(
                 "The current manual crack weighting is configured "
-                "for exactly 6 classes."
+                "for exactly 15 classes."
             )
 
         ce_w = (

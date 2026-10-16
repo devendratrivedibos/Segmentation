@@ -13,7 +13,7 @@ from .dice_coefficient_loss import (
     dice_loss,
     build_target,
 )
-from .hybrid_loss_asphalt import build_crack_criterion
+from .hybrid_loss_concrete import build_crack_criterion
 
 
 # ============================================================

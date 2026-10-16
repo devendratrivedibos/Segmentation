@@ -7,23 +7,54 @@ from torch.utils.data import Dataset
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
+# COLOR_MAP = {
+#     (0, 0, 0): (0, "Background"),
+#     (255, 0, 0): (1, "Alligator"),
+#     (0, 0, 255): (2, "Transverse Crack"),
+#     (0, 255, 0): (3, "Longitudinal Crack"),
+#     (139, 69, 19): (4, "Pothole"),
+#     (255, 165, 0): (5, "Patches"),
+#     (255, 0, 255): (6, "Multiple Crack"),
+#     (0, 255, 255): (7, "Spalling"),
+#     (0, 128, 0): (8, "Corner Break"),
+#     (255, 100, 203): (9, "Sealed Joint - T"),
+#     (199, 21, 133): (10, "Sealed Joint - L"),
+#     (128, 0, 128): (11, "Punchout"),
+#     (112, 102, 255): (12, "Popout"),
+#     (255, 255, 255): (13, "Unclassified"),
+#     (255, 215, 0): (14, "Cracking"),
+# }
+
+
+
+
 COLOR_MAP = {
     (0, 0, 0): (0, "Background"),
-    (255, 0, 0): (1, "Alligator"),
+     (0, 255, 0): (1, "Longitudinal Crack"),
     (0, 0, 255): (2, "Transverse Crack"),
-    (0, 255, 0): (3, "Longitudinal Crack"),
-    (139, 69, 19): (4, "Pothole"),
-    (255, 165, 0): (5, "Patches"),
-    (255, 0, 255): (6, "Multiple Crack"),
+    (139, 69, 19): (3, "Pothole"),
+    (255, 165, 0): (4, "Patch"),
+    (128, 0, 128): (5, "Punchout"),
+    (112, 102, 255): (6, "Popout"),
     (0, 255, 255): (7, "Spalling"),
     (0, 128, 0): (8, "Corner Break"),
-    (255, 100, 203): (9, "Sealed Joint - T"),
-    (199, 21, 133): (10, "Sealed Joint - L"),
-    (128, 0, 128): (11, "Punchout"),
-    (112, 102, 255): (12, "Popout"),
-    (255, 255, 255): (13, "Unclassified"),
-    (255, 215, 0): (14, "Cracking"),
+    (255, 100, 203): (9, "Joint Sealed Transverse Crack"),
+    (199, 21, 133): (10, "Joint Sealed Longitudinal Crack"),
+    (170, 240, 209): (11, "Multiple Crack"),
+    # (255, 0, 0): (12, "Scaling"),
+    (0, 128, 128): (12, "D-Crack"),
+    (89, 134, 179): (13, "Sealed Crack"),
+    (178, 80, 82): (14, "Diagonal Crack"),
 }
+
+
+
+
+
+
+
+
+
 
 class CrackDataset(Dataset):
     def __init__(self, root: str, train: bool, transforms=None):
