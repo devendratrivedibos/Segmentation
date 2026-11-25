@@ -30,21 +30,22 @@ from albumentations.pytorch import ToTensorV2
 
 COLOR_MAP = {
     (0, 0, 0): (0, "Background"),
-     (0, 255, 0): (1, "Longitudinal Crack"),
-    (0, 0, 255): (2, "Transverse Crack"),
-    (139, 69, 19): (3, "Pothole"),
-    (255, 165, 0): (4, "Patch"),
-    (128, 0, 128): (5, "Punchout"),
-    (112, 102, 255): (6, "Popout"),
-    (0, 255, 255): (7, "Spalling"),
-    (0, 128, 0): (8, "Corner Break"),
-    (255, 100, 203): (9, "Joint Sealed Transverse Crack"),
-    (199, 21, 133): (10, "Joint Sealed Longitudinal Crack"),
-    (170, 240, 209): (11, "Multiple Crack"),
+    #  (0, 255, 0): (1, "Longitudinal Crack"),
+    # (0, 0, 255): (2, "Transverse Crack"),
+    # # (0, 255, 255): (3, "Spalling"),
+    # (0, 128, 0): (3, "Corner Break"),
+    # (139, 69, 19): (4, "Pothole"),
+    # (255, 165, 0): (5, "Patch"),
+    # (128, 0, 128): (6, "Punchout"),
+    # (112, 102, 255): (7, "Popout"),
+    
+    (255, 100, 203): (1, "Joint Sealed Transverse Crack"),
+    (199, 21, 133): (2, "Joint Sealed Longitudinal Crack"),
+    # (170, 240, 209): (11, "Multiple Crack"),
     # (255, 0, 0): (12, "Scaling"),
-    (0, 128, 128): (12, "D-Crack"),
-    (89, 134, 179): (13, "Sealed Crack"),
-    (178, 80, 82): (14, "Diagonal Crack"),
+    # (0, 128, 128): (10, "D-Crack"),
+    # # (89, 134, 179): (14, "Sealed Crack"),
+    # (178, 80, 82): (11, "Diagonal Crack")
 }
 
 
@@ -119,8 +120,8 @@ class SegmentationPresetTrain:
     def __init__(self, img_size, mean, std):
         self.transforms = A.Compose([
             # --- Geometric ---
-            A.HorizontalFlip(p=0.4),
-            A.VerticalFlip(p=0.4),  # vertical cracks possible, but rare
+            # A.HorizontalFlip(p=0.4),
+            # A.VerticalFlip(p=0.4),  # vertical cracks possible, but rare
             # A.ShiftScaleRotate(
             #     shift_limit=0.02,  # small shifts only
             #     scale_limit=0.1,  # mild zoom in/out

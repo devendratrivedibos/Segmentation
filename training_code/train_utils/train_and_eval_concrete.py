@@ -22,7 +22,7 @@ from .hybrid_loss_concrete import build_crack_criterion
 
 IGNORE_INDEX = 255
 
-NUM_CLASSES = 15
+NUM_CLASSES = 3
 
 # ------------------------------------------------------------
 # Default device

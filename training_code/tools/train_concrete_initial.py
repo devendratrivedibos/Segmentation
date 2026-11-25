@@ -33,8 +33,8 @@ from models.unet.UnetPP_backbone import build_unetpp_model
 
 
 project_root_ = Path(__file__).resolve().parent.parent.parent
-OUTPUT_SAVE_PATH = project_root_ / 'weights' / '15oct'  # Change this to your desired output path
-model_name = "15oct"  # Change this to your desired model name
+OUTPUT_SAVE_PATH = project_root_ / 'weights' / '24Nov'  # Change this to your desired output path
+model_name = "24Nov"  # Change this to your desired model name
 os.makedirs(OUTPUT_SAVE_PATH, exist_ok=True)
 CHECKPOINT_FILE = OUTPUT_SAVE_PATH / "latest_checkpoint.pth"
 
@@ -374,9 +374,9 @@ Parse command-line arguments for training configuration.
     parser = argparse.ArgumentParser(description="pytorch unet training")
     parser.add_argument("--device", default="cuda:0", help="training device")
     parser.add_argument("--data-path",
-                        default=r"C:\Users\Admin\Downloads\Dataset\SPLIT",
+                        default=r"C:\Users\HP\Downloads\Data\aug_new\split_2",
                         help="local dataset root used with --no-clearml")
-    parser.add_argument("--num-classes", default=14, type=int)  # exclude background
+    parser.add_argument("--num-classes", default=2, type=int)  # exclude background
     parser.add_argument("--aux", default=True, type=bool, help="deeplabv3 auxilier loss")
     parser.add_argument("--phi", default="b0", help="Use backbone")
     parser.add_argument('--pretrained', default=False, type=bool, help='backbone')

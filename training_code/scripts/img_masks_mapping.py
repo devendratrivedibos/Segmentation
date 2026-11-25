@@ -3,8 +3,8 @@ import os
 # ==========================
 # CONFIGURATION
 # ==========================
-IMAGE_FOLDER = r"C:\Users\Admin\Downloads\Dataset\IMAGES"
-MASK_FOLDER = r"C:\Users\Admin\Downloads\Dataset\MASKS"
+IMAGE_FOLDER = r"C:\Users\HP\Downloads\IMAGES"
+MASK_FOLDER = r"C:\Users\HP\Downloads\MASKS"
 # ==========================
 
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png")

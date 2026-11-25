@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(project_root, '..'))
-from train_utils.train_and_eval_asphalt import evaluate, create_lr_scheduler, train_one_epoch_loss, criterion
+from train_utils.train_and_eval_concrete import evaluate, create_lr_scheduler, train_one_epoch_loss, criterion
 from train_utils.my_dataset_concrete import CrackDataset, SegmentationPresetTrain, SegmentationPresetEval, COLOR_MAP
 from train_utils.utils import plot, show_config
 
@@ -28,15 +28,13 @@ from train_utils.utils import plot, show_config
 # from models.deeplab_v3.deeplabv3 import deeplabv3_mobilenetv3_large
 from models.unet.UnetPP import UNetPP
 from models.unet.UnetPP_backbone import build_unetpp_model
-from clearml import Dataset
-from clearml import Task
 
 # from models.dinov3.dinov3 import DINODeepLab
 
 
 project_root_ = Path(__file__).resolve().parent.parent.parent
-OUTPUT_SAVE_PATH = project_root_ / 'weights' / '15oct'  # Change this to your desired output path
-model_name = "15oct"  # Change this to your desired model name
+OUTPUT_SAVE_PATH = project_root_ / 'weights' / '20Nov'  # Change this to your desired output path
+model_name = "20Nov"  # Change this to your desired model name
 os.makedirs(OUTPUT_SAVE_PATH, exist_ok=True)
 CHECKPOINT_FILE = OUTPUT_SAVE_PATH / "latest_checkpoint.pth"
 
@@ -75,7 +73,8 @@ def create_model(aux, num_classes, pretrained=True):
     return model
 
 
-def save_checkpoint(save_path, epoch, model, optimizer, lr_scheduler, scaler, best_dice, train_loss, dice_coefficient):
+def save_checkpoint(save_path, epoch, model, optimizer, lr_scheduler, scaler, best_dice, train_loss,
+                    dice_coefficient, best_epoch=None, best_model_path=None):
     checkpoint = {
         "epoch": epoch,
         "model": model.state_dict(),
@@ -83,7 +82,9 @@ def save_checkpoint(save_path, epoch, model, optimizer, lr_scheduler, scaler, be
         "lr_scheduler": lr_scheduler.state_dict(),
         "best_dice": best_dice,
         "train_loss": train_loss,
-        "dice_coefficient": dice_coefficient
+        "dice_coefficient": dice_coefficient,
+        "best_epoch": best_epoch,
+        "best_model_path": str(best_model_path.resolve()) if best_model_path is not None else None
     }
     if scaler is not None:
         checkpoint["scaler"] = scaler.state_dict()
@@ -100,6 +101,8 @@ def log_segmentation_metrics(logger, split, confmat, dice, epoch, class_names):
 
 
 def pull_clearml_dataset(args, task=None):
+    from clearml import Dataset
+
     dataset_project = args.clearml_dataset_project or args.clearml_project
     dataset_kwargs = {}
     if args.clearml_dataset_id:
@@ -142,8 +145,12 @@ def pull_clearml_dataset(args, task=None):
 
 
 def main(args, task=None):
+    if args.no_clearml:
+        task = None
     logger = task.get_logger() if task is not None else None
-    dataset_info = pull_clearml_dataset(args, task=task)
+    dataset_info = None
+    if not args.no_clearml:
+        dataset_info = pull_clearml_dataset(args, task=task)
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     # segmentation nun_classes + background
     num_classes = args.num_classes + 1
@@ -233,7 +240,9 @@ def main(args, task=None):
     lr_scheduler = create_lr_scheduler(optimizer, len(train_loader), args.epochs, warmup=True,
                                        warmup_epochs=args.warmup_epochs)
     scaler = torch.cuda.amp.GradScaler() if args.amp else None
-    best_dice = 0.0
+    best_dice = -1.0
+    best_epoch = None
+    best_model_path = None
     train_loss = []
     dice_coefficient = []
     if args.resume and os.path.exists(args.resume):
@@ -243,6 +252,9 @@ def main(args, task=None):
         lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
         args.start_epoch = checkpoint["epoch"] + 1
         best_dice = checkpoint.get("best_dice", 0.0)
+        best_epoch = checkpoint.get("best_epoch")
+        if checkpoint.get("best_model_path"):
+            best_model_path = Path(checkpoint["best_model_path"])
         train_loss = checkpoint.get("train_loss", [])
         dice_coefficient = checkpoint.get("dice_coefficient", [])
         if scaler is not None and "scaler" in checkpoint:
@@ -253,11 +265,6 @@ def main(args, task=None):
     config_info = {
         'device': str(device),
         'data_path': args.data_path,
-        'clearml_dataset_project': dataset_info["dataset_project"],
-        'clearml_dataset_name': dataset_info["dataset_name"],
-        'clearml_dataset_version': dataset_info["dataset_version"],
-        'clearml_dataset_id': dataset_info["dataset_id"],
-        'clearml_dataset_local_path': dataset_info["dataset_local_path"],
         'num_classes': num_classes,
         'model': model.__class__.__name__,
         'backbone_pretrained': args.pretrained,
@@ -279,10 +286,29 @@ def main(args, task=None):
         'val_samples': len(val_dataset),
     }
 
+    if dataset_info is not None:
+        config_info.update({f"clearml_{key}": value for key, value in dataset_info.items()})
+
     class_labels = {index: name for index, name in COLOR_MAP.values()}
     class_names = [class_labels.get(index, f"class_{index}") for index in range(num_classes)]
+    best_output_model = None
     if task is not None:
+        from clearml import OutputModel
+
         task.connect(config_info, name="Runtime", ignore_remote_overrides=True)
+        best_output_model = OutputModel(
+            task=task, name=f"{model_name}_best_val_dice", framework="PyTorch",
+            config_dict=config_info,
+            label_enumeration={name: index for index, name in enumerate(class_names)})
+        if best_model_path is not None and best_model_path.is_file():
+            best_output_model.update_weights(
+                weights_filename=str(best_model_path), auto_delete_file=False,
+                iteration=best_epoch, async_enable=False)
+            logger.report_single_value("best_val_dice", best_dice)
+            if best_epoch is not None:
+                logger.report_single_value("best_val_epoch", best_epoch)
+        elif args.start_epoch > 0:
+            print("Previous best weights are unavailable; ClearML will upload the next improved validation model.")
 
     show_config(config_info)
 
@@ -342,23 +368,31 @@ def main(args, task=None):
 
             f.write(train_info + val_info + "\n\n")
 
-            torch.save(model.state_dict(), OUTPUT_SAVE_PATH / f"{model_name}_best_epoch{epoch}_dice{dice:.3f}.pth")
-            best_model_info = OUTPUT_SAVE_PATH / f"{model_name}_best_epoch{epoch}_dice{dice:.3f}.txt"
-            with open(best_model_info, "w") as f:
-                f.write(train_info + val_info)
+        if not args.save_best:
+            torch.save(model.state_dict(), OUTPUT_SAVE_PATH / f"{model_name}_epoch{epoch}_dice{dice:.3f}.pth")
 
-        if args.save_best is True:
-            if best_dice < dice:
-                best_dice = dice
-                torch.save(model.state_dict(), OUTPUT_SAVE_PATH / f"{model_name}_best_epoch{epoch}_dice{dice:.3f}.pth")
-                best_model_info = OUTPUT_SAVE_PATH / f"{model_name}_best_epoch{epoch}_dice{dice:.3f}.txt"
-                with open(best_model_info, "w") as f:
-                    f.write(train_info + val_info)
-            else:
-                continue
+        if dice > best_dice:
+            best_dice = dice
+            best_epoch = epoch
+            best_model_path = OUTPUT_SAVE_PATH / f"{model_name}_best.pth"
+            torch.save(model.state_dict(), best_model_path)
+            with open(OUTPUT_SAVE_PATH / f"{model_name}_best.txt", "w") as f:
+                f.write(train_info + val_info)
+            if best_output_model is not None:
+                # Finish uploading before the best weights file can be overwritten.
+                best_output_model.update_weights(
+                    weights_filename=str(best_model_path), auto_delete_file=False,
+                    iteration=epoch, async_enable=False)
+                best_output_model.report_scalar("dice", "val", value=dice, iteration=epoch)
+                logger.report_single_value("best_val_epoch", epoch)
+
+        if logger is not None:
+            logger.report_scalar("dice", "best_val", value=best_dice, iteration=epoch)
+            logger.report_single_value("best_val_dice", best_dice)
         save_checkpoint(
             save_path=CHECKPOINT_FILE, epoch=epoch, model=model, optimizer=optimizer, lr_scheduler=lr_scheduler,
-            scaler=scaler, best_dice=best_dice, train_loss=train_loss, dice_coefficient=dice_coefficient)
+            scaler=scaler, best_dice=best_dice, train_loss=train_loss, dice_coefficient=dice_coefficient,
+            best_epoch=best_epoch, best_model_path=best_model_path)
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
@@ -372,9 +406,9 @@ Parse command-line arguments for training configuration.
     parser = argparse.ArgumentParser(description="pytorch unet training")
     parser.add_argument("--device", default="cuda:0", help="training device")
     parser.add_argument("--data-path",
-                        default=r"G:\Devendra\ASPHALT\TRAIN_MIX\SPLIT",
-                        help="root")
-    parser.add_argument("--num-classes", default=14, type=int)  # exclude background
+                        default=r"G:\Devendra\CONCRETE\SPLIT_06-11-2026\split",
+                        help="local dataset root used with --no-clearml")
+    parser.add_argument("--num-classes", default=11, type=int)  # exclude background
     parser.add_argument("--aux", default=True, type=bool, help="deeplabv3 auxilier loss")
     parser.add_argument("--phi", default="b0", help="Use backbone")
     parser.add_argument('--pretrained', default=False, type=bool, help='backbone')
@@ -396,8 +430,9 @@ Parse command-line arguments for training configuration.
 
     parser.add_argument('--save-best', default=False, type=bool, help='only save best dice weights')
     parser.add_argument('--resume', default=str(CHECKPOINT_FILE), help='resume from checkpoint')
-    parser.add_argument('--no-clearml', action='store_true', help='disable ClearML tracking')
-    parser.add_argument('--clearml-project', default='c3d-Segmentation')
+    parser.add_argument('--no-clearml', action='store_true',
+                        help='disable ClearML tracking and downloads; use --data-path')
+    parser.add_argument('--clearml-project', default='C3D Distress')
     parser.add_argument('--clearml-task-name', default=model_name)
     parser.add_argument('--clearml-output-uri', default='', help='model upload destination; defaults to ClearML file server')
     parser.add_argument('--clearml-dataset-project', default='',
@@ -421,6 +456,8 @@ if __name__ == '__main__':
     args = parse_args()
     task = None
     if not args.no_clearml:
+        from clearml import Task
+
         task = Task.init(
             project_name=args.clearml_project, task_name=args.clearml_task_name,
             output_uri=args.clearml_output_uri or True,

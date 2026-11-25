@@ -7,12 +7,12 @@ from pathlib import Path
 # CONFIGURATION
 # ============================================================
 
-IMAGE_FOLDER = Path(r"C:\Users\Admin\Downloads\Dataset\IMAGES")
-MASK_FOLDER = Path(r"C:\Users\Admin\Downloads\Dataset\MASKS")
+IMAGE_FOLDER = Path(r"C:\Users\HP\Downloads\IMAGES")
+MASK_FOLDER = Path(r"C:\Users\HP\Downloads\MASKS")
 
-OUTPUT_FOLDER = Path(r"C:\Users\Admin\Downloads\Dataset\SPLIT")
+OUTPUT_FOLDER = Path(r"G:\Devendra\CONCRETE\SPLIT_17-10-2026")
 
-TRAIN_RATIO = 0.90
+TRAIN_RATIO = 0.85
 RANDOM_SEED = 42
 
 # True = move original files

@@ -1153,20 +1153,21 @@ def build_crack_criterion(
         manual_ce = torch.tensor(
             [
                 0.10,   # 0 Background
-                0.50,   # 1 Alligator
+                1.50,   # 1 Alligator
                 1.50,   # 2 Transverse
-                1.50,   # 3 Longitudinal
-                1.00,   # 4 Pothole
-                1.00 ,
-                1.00,  # 5 Patch
-                                  1.00,
-                                1.00,
-                                 1.00,
-                                1.00,
-                                1.00,
-                                1.00,
-                                1.00,
-                                1.00
+                # 1.50,   # 3 Longitudinal
+                # 1.00,   # 4 Pothole
+                # 1.00 ,
+                # 1.00,  # 5 Patch
+                #                   1.00,
+                #                 1.00,
+                #                  1.00,
+                #                 1.00,
+                #                 1.00,
+                                # 1.00,
+                                # 1.00,
+                                # 1.00,
+                                # 1.00
                         # 5 Patch
             ],
             device=device,
@@ -1175,21 +1176,22 @@ def build_crack_criterion(
 
         manual_overlap = torch.tensor(
             [
-                0.10,   # 0 Background
-                0.75,   # 1 Alligator
-                1.50,   # 2 Transverse
-                1.50,   # 3 Longitudinal
-                1.00,   # 4 Pothole
-                1.00,
-                 1.00,  # 5 Patch
-                  1.00,
-                1.00,
-                 1.00,
-                1.00,
-                1.00,
-                1.00,
-                1.00,
-                1.00
+               0.10,   # 0 Background
+                               1.50,   # 1 Alligator
+                               1.50,   # 2 Transverse
+                #                1.50,    # 3 Longitudinal
+                # 1.00,   # 4 Pothole
+                # 1.00,
+                #  1.00,  # 5 Patch
+                #   1.00,
+                # 1.00,
+                #  1.00,
+                # 1.00,
+                # 1.00,
+                # 1.00,
+                # 1.00,
+                # 1.00,
+                # 1.00
                 
 
 
@@ -1203,11 +1205,11 @@ def build_crack_criterion(
         )
 
         # Safety for different class counts
-        if num_classes != 15:
+        if num_classes != 3:
 
             raise ValueError(
                 "The current manual crack weighting is configured "
-                "for exactly 15 classes."
+                "for exactly 3 classes."
             )
 
         ce_w = (
